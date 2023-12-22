@@ -1,12 +1,15 @@
 import Phaser from "phaser";
 
+const dice1Array = ["Melee.png", "DefMelee.png", "Ranged.png"];
+
 export default class AncientDices extends Phaser.Scene {
   preload() {
-    this.load.image("melee", "src/assets/SideDices/Melee.png");
-    this.load.image("Defmelee", "src/assets/SideDices/DefMelee.png");
-    this.load.image("ranged", "src/assets/SideDices/ranged.png");
-    this.load.image("Defranged", "src/assets/SideDices/DefMelee.png");
-    this.load.image("thief", "src/assets/SideDices/Thief.png");
+    //Dice 1
+    dice1Array.forEach((dice1) => {
+      this.load.image(dice1, `src/assets/SideDices/${dice1}`);
+    });
+
+    //RobotArm Interactives
     this.load.image("roll", "src/assets/RoboticArm/Roll.png");
     this.load.image("roboticArm", "src/assets/RoboticArm/RoboticArm.png");
     this.load.image("slot", "src/assets/RoboticArm/Slot.png");
@@ -16,15 +19,32 @@ export default class AncientDices extends Phaser.Scene {
     this.add.image(230, 500, "roboticArm");
     this.add.image(100, 500, "slot");
 
-    const slot = this.add.group({
-      defaultKey: 'melee',
-      maxSize: 1
-    })
+    //Button onclick spawn a SideDice on Robotic arm
 
     const rollButton = this.add.image(500, 500, "roll").setInteractive();
+    let diceSide1DragDrop;
+    let selectedDice = null;
+
     rollButton.on("pointerdown", () => {
-      console.log("Sim");
-      slot.get(100, 500)
+      const randomDiceSide1 = Phaser.Math.RND.pick(dice1Array);
+      const diceSide1 = this.add.sprite(100, 500, randomDiceSide1);
+      //Drag and Drop DiceSide
+      diceSide1DragDrop = diceSide1.setInteractive({ draggable: true });
+
+      diceSide1DragDrop.on("pointerdown", () => {
+        selectedDice = diceSide1DragDrop;
+      });
+
+      diceSide1DragDrop.on("pointerup", () => {
+        selectedDice = null;
+      });
+
+      diceSide1DragDrop.on("drag", (pointer) => {
+        if (selectedDice) {
+          selectedDice.x = pointer.x;
+          selectedDice.y = pointer.y;
+        }
+      });
     });
   }
 
