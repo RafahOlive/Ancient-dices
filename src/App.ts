@@ -15,23 +15,16 @@ export default class AncientDices extends Phaser.Scene {
   create() {
     this.add.image(230, 500, "roboticArm");
     this.add.image(100, 500, "slot");
-    // this.add.image(100, 500, "melee");
 
-    class FirstSlot extends Phaser.GameObjects.Image {
-      constructor(scene) {
-        super(scene, 0, 0, "melee");
-      }
-
-      Place() {
-        this.setActive(true);
-        this.setVisible(true);
-      }
-    }
+    const slot = this.add.group({
+      defaultKey: 'melee',
+      maxSize: 1
+    })
 
     const rollButton = this.add.image(500, 500, "roll").setInteractive();
     rollButton.on("pointerdown", () => {
       console.log("Sim");
-      FirstSlot;
+      slot.get(100, 500)
     });
   }
 
