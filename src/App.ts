@@ -18,11 +18,18 @@ export default class AncientDices extends Phaser.Scene {
 
   create() {
     this.add.image(230, 500, "roboticArm");
+    this.add.image(570, 100, "roboticArm");
 
-    const slots: Phaser.GameObjects.Image[] = [];
+    const firstSlots: Phaser.GameObjects.Image[] = [];
     for (let i = 0; i < 6; i++) {
       const slot = this.add.image(100 + i * 50, 500, "slot");
-      slots.push(slot);
+      firstSlots.push(slot);
+    }
+
+    const secondSlots: Phaser.GameObjects.Image[] = [];
+    for (let i = 0; i < 6; i++) {
+      const slot = this.add.image(700 + i * -50, 100, "slot");
+      secondSlots.push(slot);
     }
 
     //Button onclick spawn a SideDice on Robotic arm
@@ -32,12 +39,11 @@ export default class AncientDices extends Phaser.Scene {
       for (const diceName in diceArrays) {
         const diceArray = diceArrays[diceName];
         const randomDiceSide = Phaser.Math.RND.pick(diceArray);
-        const slot = slots[slotIndex];
+        const slot = firstSlots[slotIndex];
 
         if (slot) {
           spawnDiceOnSlot(this, slot.x, slot.y, randomDiceSide, selectedSprite);
         }
-
         slotIndex++;
       }
     });
