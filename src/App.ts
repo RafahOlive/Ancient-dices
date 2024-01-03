@@ -1,16 +1,15 @@
 import Phaser from "phaser";
-import { diceArrays } from "./diceData";
-import { loadDiceImages, spawnDiceOnSlot } from "./diceFunctions";
-
-const selectedSprite: Phaser.GameObjects.Sprite | null = null;
+import { diceArrays, DiceArrayItem } from "./diceData";
 
 export default class AncientDices extends Phaser.Scene {
+  private menuGroup!: Phaser.GameObjects.Group;
+
   preload() {
     for (const diceName in diceArrays) {
-      loadDiceImages(this, diceName, diceArrays[diceName]);
+      this.loadDiceImages(diceName, diceArrays[diceName]);
     }
 
-    //RobotArm Interactives
+    // RobotArm Interactives
     this.load.image("roll", "src/assets/RoboticArm/Roll.png");
     this.load.image("roboticArm", "src/assets/RoboticArm/RoboticArm.png");
     this.load.image("slot", "src/assets/RoboticArm/Slot.png");
@@ -32,7 +31,7 @@ export default class AncientDices extends Phaser.Scene {
       secondSlots.push(slot);
     }
 
-    //Button onclick spawn a SideDice on Robotic arm
+    // Button onclick spawn a SideDice on Robotic arm
     const rollButton = this.add.image(500, 500, "roll").setInteractive();
     rollButton.on("pointerdown", () => {
       let slotIndex = 0;
@@ -42,10 +41,81 @@ export default class AncientDices extends Phaser.Scene {
         const slot = firstSlots[slotIndex];
 
         if (slot) {
-          spawnDiceOnSlot(this, slot.x, slot.y, randomDiceSide, selectedSprite);
+          this.spawnDiceOnSlot(slot.x, slot.y, randomDiceSide, diceName);
         }
         slotIndex++;
       }
     });
+
+    // Inicialize o grupo de menu
+    this.menuGroup = this.add.group().setVisible(false);
+  }
+
+  private loadDiceImages(diceName: string, diceArray: DiceArrayItem[]) {
+    diceArray.forEach((item) => {
+      this.load.image(
+        `${diceName}_${item.name}`,
+        `src/assets/SideDices/${item.imagePath}`
+      );
+    });
+  }
+
+  private spawnDiceOnSlot(
+    x: number,
+    y: number,
+    diceSide: DiceArrayItem,
+    diceName: string
+  ) {
+    const diceKey = `${diceName}_${diceSide.name}`;
+
+    if (!this.textures.exists(diceKey)) {
+      this.load.image(diceKey, `src/assets/SideDices/${diceSide.imagePath}`);
+      this.load.start();
+      this.load.once("complete", () => {
+        this.createDiceSprite(x, y, diceKey);
+      });
+    } else {
+      this.createDiceSprite(x, y, diceKey);
+    }
+  }
+
+  private createDiceSprite(x: number, y: number, diceKey: string) {
+    const diceSprite = this.add.sprite(x, y, diceKey).setInteractive();
+    diceSprite.on("pointerdown", () => {
+      this.menuGroup.setVisible(true);
+      this.createText("Selecionar", 400, 300);
+      this.createText("Detalhes", 400, 350);
+      this.createText("Cancelar", 400, 400);
+      // Lógica adicional para interação com o menu, se necessário
+    });
+  }
+
+  private createText(text: string, x: number, y: number) {
+    const menuText = this.add
+      .text(x, y, text, {
+        color: "#000000",
+        backgroundColor: "#ffffff",
+        padding: {
+          left: 10,
+          right: 10,
+          top: 5,
+          bottom: 5,
+        },
+      })
+      .setOrigin(0.5, 0.5)
+      .setInteractive()
+      .on("pointerdown", () => {
+        console.log(`${text} clicado!`);
+
+        // Acesse a propriedade menuGroup usando uma referência local
+        const localMenuGroup = this.menuGroup;
+
+        // Adicione aqui a lógica para o que acontece quando o texto é clicado
+        if (text === "Cancelar" && localMenuGroup) {
+          localMenuGroup.setVisible(false);
+        }
+      });
+
+    this.menuGroup.add(menuText);
   }
 }
