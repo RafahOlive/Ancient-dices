@@ -18,8 +18,7 @@ export function spawnDiceOnSlot(
   scene: Phaser.Scene,
   x: number,
   y: number,
-  diceSide: DiceArrayItem,
-  selectedSprite: Phaser.GameObjects.Sprite | null
+  diceSide: DiceArrayItem
 ) {
   const diceKey = `dice1_${diceSide.name}`;
 
@@ -27,23 +26,10 @@ export function spawnDiceOnSlot(
     scene.load.image(diceKey, `src/assets/SideDices/${diceSide.imagePath}`);
     scene.load.start();
     scene.load.once("complete", () => {
-      const diceSprite = scene.add
-        .sprite(x, y, diceKey)
-        .setInteractive({ draggable: true });
+      const diceSprite = scene.add.sprite(x, y, diceKey).setInteractive();
 
       diceSprite.on("pointerdown", () => {
         selectedSprite = diceSprite;
-      });
-
-      diceSprite.on("pointerup", () => {
-        selectedSprite = null;
-      });
-
-      diceSprite.on("drag", (pointer: Phaser.Input.Pointer) => {
-        if (selectedSprite === diceSprite) {
-          diceSprite.x = pointer.x;
-          diceSprite.y = pointer.y;
-        }
       });
     });
   } else {
@@ -55,22 +41,5 @@ export function spawnDiceOnSlot(
     diceSprite.on("pointerdown", () => {
       selectedSprite = diceSprite;
     });
-
-    diceSprite.on("pointerup", function () {
-      selectedSprite = null;
-    });
-
-    diceSprite.on(
-      "drag",
-      function (
-        this: Phaser.GameObjects.Sprite,
-        pointer: Phaser.Input.Pointer
-      ) {
-        if (selectedSprite === this) {
-          this.x = pointer.x;
-          this.y = pointer.y;
-        }
-      }
-    );
   }
 }
