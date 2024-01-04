@@ -3,6 +3,7 @@ import { diceArrays, DiceArrayItem } from "./diceData";
 
 export default class AncientDices extends Phaser.Scene {
   private menuGroup!: Phaser.GameObjects.Group;
+  private diceSprites: Phaser.GameObjects.Sprite[] = [];
 
   preload() {
     for (const diceName in diceArrays) {
@@ -72,21 +73,28 @@ export default class AncientDices extends Phaser.Scene {
       this.load.image(diceKey, `src/assets/SideDices/${diceSide.imagePath}`);
       this.load.start();
       this.load.once("complete", () => {
-        this.createDiceSprite(x, y, diceKey);
+        this.createDiceSprite(x, y, diceKey, diceSide.name);
       });
     } else {
-      this.createDiceSprite(x, y, diceKey);
+      this.createDiceSprite(x, y, diceKey, diceSide.name);
     }
   }
 
-  private createDiceSprite(x: number, y: number, diceKey: string) {
+  private createDiceSprite(
+    x: number,
+    y: number,
+    diceKey: string,
+    diceSideName: string
+  ) {
     const diceSprite = this.add.sprite(x, y, diceKey).setInteractive();
     diceSprite.on("pointerdown", () => {
       this.menuGroup.setVisible(true);
-      this.createText("Selecionar", 400, 300);
-      this.createText("Detalhes", 400, 350);
-      this.createText("Cancelar", 400, 400);
-      // Lógica adicional para interação com o menu, se necessário
+      this.createText("Selecionar", 100, 420);
+      this.createText("Detalhes", 100, 440);
+      this.createText("Cancelar", 100, 460);
+
+      console.log(`Lado do dado selecionado: ${diceSideName}`);
+      this.diceSprites.push(diceSprite); // Adiciona o dado ao array
     });
   }
 
@@ -98,24 +106,35 @@ export default class AncientDices extends Phaser.Scene {
         padding: {
           left: 10,
           right: 10,
-          top: 5,
-          bottom: 5,
+          top: 1,
+          bottom: 1,
         },
+        fontSize: 12,
+        lineSpacing: 10,
       })
       .setOrigin(0.5, 0.5)
       .setInteractive()
       .on("pointerdown", () => {
         console.log(`${text} clicado!`);
-
-        // Acesse a propriedade menuGroup usando uma referência local
         const localMenuGroup = this.menuGroup;
 
-        // Adicione aqui a lógica para o que acontece quando o texto é clicado
         if (text === "Cancelar" && localMenuGroup) {
+          localMenuGroup.setVisible(false);
+        } else if (text === "Selecionar" && localMenuGroup) {
+          // Pega o último dado criado (pode ser ajustado conforme necessário)
+          const lastDice = this.diceSprites[this.diceSprites.length - 1];
+          
+          // Aqui, você pode colocar a lógica para posicionar o dado no campo de batalha
+          this.colocarNoCampo(lastDice, 100, 100);
           localMenuGroup.setVisible(false);
         }
       });
 
     this.menuGroup.add(menuText);
+  }
+
+  colocarNoCampo(diceSprite: Phaser.GameObjects.Sprite, posicaoX: number, posicaoY: number) {
+    diceSprite.x = posicaoX;
+    diceSprite.y = posicaoY;
   }
 }
