@@ -4,6 +4,8 @@ import { diceArrays, DiceArrayItem } from "./diceData";
 export default class AncientDices extends Phaser.Scene {
   private menuGroup!: Phaser.GameObjects.Group;
   private diceSprites: Phaser.GameObjects.Sprite[] = [];
+  private isPlayerTurn: boolean = true;
+  private hasRolledDice: boolean = false;
 
   preload() {
     for (const diceName in diceArrays) {
@@ -18,15 +20,13 @@ export default class AncientDices extends Phaser.Scene {
 
   create() {
     this.add.image(230, 500, "roboticArm");
-    this.add.image(570, 100, "roboticArm"); 
-    this.add.rectangle(350, 300, 400, 200, 0x3498db)
+    this.add.image(570, 100, "roboticArm");
+    this.add.rectangle(350, 300, 400, 200, 0x3498db);
 
     const finishTurnButton = this.add.rectangle(700, 300, 100, 50, 0x3498db);
     finishTurnButton.setInteractive();
 
-    finishTurnButton.on('pointerdown', () => {
-
-    })
+    finishTurnButton.on("pointerdown", () => {});
 
     const firstSlots: Phaser.GameObjects.Image[] = [];
     for (let i = 0; i < 6; i++) {
@@ -43,20 +43,25 @@ export default class AncientDices extends Phaser.Scene {
     // Button onclick spawn a SideDice on Robotic arm
     const rollButton = this.add.image(500, 500, "roll").setInteractive();
     rollButton.on("pointerdown", () => {
-      let slotIndex = 0;
-      for (const diceName in diceArrays) {
-        const diceArray = diceArrays[diceName];
-        const randomDiceSide = Phaser.Math.RND.pick(diceArray);
-        const slot = firstSlots[slotIndex];
+      if (!this.isPlayerTurn) {
+        return;
+      } else if (this.isPlayerTurn && this.hasRolledDice) {
+        return;
+      } else if (this.isPlayerTurn && !this.hasRolledDice) {
+        let slotIndex = 0;
+        for (const diceName in diceArrays) {
+          const diceArray = diceArrays[diceName];
+          const randomDiceSide = Phaser.Math.RND.pick(diceArray);
+          const slot = firstSlots[slotIndex];
 
-        if (slot) {
-          this.spawnDiceOnSlot(slot.x, slot.y, randomDiceSide, diceName);
+          if (slot) {
+            this.spawnDiceOnSlot(slot.x, slot.y, randomDiceSide, diceName);
+          }
+          slotIndex++;
+          this.hasRolledDice = true;
         }
-        slotIndex++;
       }
     });
-
-    // Inicialize o grupo de menu
     this.menuGroup = this.add.group().setVisible(false);
   }
 
@@ -131,7 +136,7 @@ export default class AncientDices extends Phaser.Scene {
         } else if (text === "Selecionar" && localMenuGroup) {
           // Pega o último dado criado (pode ser ajustado conforme necessário)
           const lastDice = this.diceSprites[this.diceSprites.length - 1];
-          
+
           // Aqui, você pode colocar a lógica para posicionar o dado no campo de batalha
           this.colocarNoCampo(lastDice, 100, 100);
           localMenuGroup.setVisible(false);
@@ -141,7 +146,11 @@ export default class AncientDices extends Phaser.Scene {
     this.menuGroup.add(menuText);
   }
 
-  colocarNoCampo(diceSprite: Phaser.GameObjects.Sprite, posicaoX: number, posicaoY: number) {
+  colocarNoCampo(
+    diceSprite: Phaser.GameObjects.Sprite,
+    posicaoX: number,
+    posicaoY: number
+  ) {
     diceSprite.x = posicaoX;
     diceSprite.y = posicaoY;
   }
