@@ -18,7 +18,15 @@ export default class AncientDices extends Phaser.Scene {
 
   create() {
     this.add.image(230, 500, "roboticArm");
-    this.add.image(570, 100, "roboticArm");
+    this.add.image(570, 100, "roboticArm"); 
+    this.add.rectangle(350, 300, 400, 200, 0x3498db)
+
+    const finishTurnButton = this.add.rectangle(700, 300, 100, 50, 0x3498db);
+    finishTurnButton.setInteractive();
+
+    finishTurnButton.on('pointerdown', () => {
+
+    })
 
     const firstSlots: Phaser.GameObjects.Image[] = [];
     for (let i = 0; i < 6; i++) {
