@@ -6,6 +6,8 @@ export default class AncientDices extends Phaser.Scene {
   private diceSprites: Phaser.GameObjects.Sprite[] = [];
   private isPlayerTurn: boolean = true;
   private hasRolledDice: boolean = false;
+  private humanBattlefieldDice: Phaser.GameObjects.Sprite[] = [];
+  private humanBattlefieldSlots: Phaser.GameObjects.Image[] = [];
 
   preload() {
     for (const diceName in diceArrays) {
@@ -28,16 +30,27 @@ export default class AncientDices extends Phaser.Scene {
 
     finishTurnButton.on("pointerdown", () => {});
 
-    const firstSlots: Phaser.GameObjects.Image[] = [];
+    const humanRobotArmSlots: Phaser.GameObjects.Image[] = [];
     for (let i = 0; i < 6; i++) {
       const slot = this.add.image(100 + i * 50, 500, "slot");
-      firstSlots.push(slot);
+      humanRobotArmSlots.push(slot);
     }
 
-    const secondSlots: Phaser.GameObjects.Image[] = [];
+    const aiRobotArmSlots: Phaser.GameObjects.Image[] = [];
     for (let i = 0; i < 6; i++) {
       const slot = this.add.image(700 + i * -50, 100, "slot");
-      secondSlots.push(slot);
+      aiRobotArmSlots.push(slot);
+    }
+
+    for (let i = 0; i < 6; i++) {
+      const slot = this.add.image(200 + i * 50, 370, "slot");
+      this.humanBattlefieldSlots.push(slot);
+    }
+
+    const aiBattlefieldSlots: Phaser.GameObjects.Image[] = [];
+    for (let i = 0; i < 6; i++) {
+      const slot = this.add.image(200 + i * 50, 240, "slot");
+      aiBattlefieldSlots.push(slot);
     }
 
     // Button onclick spawn a SideDice on Robotic arm
@@ -52,7 +65,7 @@ export default class AncientDices extends Phaser.Scene {
         for (const diceName in diceArrays) {
           const diceArray = diceArrays[diceName];
           const randomDiceSide = Phaser.Math.RND.pick(diceArray);
-          const slot = firstSlots[slotIndex];
+          const slot = humanRobotArmSlots[slotIndex];
 
           if (slot) {
             this.spawnDiceOnSlot(slot.x, slot.y, randomDiceSide, diceName);
@@ -137,9 +150,20 @@ export default class AncientDices extends Phaser.Scene {
           // Pega o último dado criado (pode ser ajustado conforme necessário)
           const lastDice = this.diceSprites[this.diceSprites.length - 1];
 
-          // Aqui, você pode colocar a lógica para posicionar o dado no campo de batalha
-          this.colocarNoCampo(lastDice, 100, 100);
-          localMenuGroup.setVisible(false);
+          // Verifica se há slots disponíveis no campo de batalha
+          if (
+            this.humanBattlefieldDice.length < this.humanBattlefieldSlots.length
+          ) {
+            // Calcula a posição do próximo slot disponível
+            const nextSlotIndex = this.humanBattlefieldDice.length;
+            const nextSlot = this.humanBattlefieldSlots[nextSlotIndex];
+
+            // Move o dado para o próximo slot disponível
+            this.colocarNoCampo(lastDice, nextSlot.x, nextSlot.y);
+
+            // Oculta o menuGroup
+            localMenuGroup.setVisible(false);
+          }
         }
       });
 
@@ -148,10 +172,13 @@ export default class AncientDices extends Phaser.Scene {
 
   colocarNoCampo(
     diceSprite: Phaser.GameObjects.Sprite,
-    posicaoX: number,
-    posicaoY: number
+    slotX: number,
+    slotY: number
   ) {
-    diceSprite.x = posicaoX;
-    diceSprite.y = posicaoY;
+    diceSprite.x = slotX;
+    diceSprite.y = slotY;
+
+    // Adicione o dado ao array de dados no campo de batalha
+    this.humanBattlefieldDice.push(diceSprite);
   }
 }
