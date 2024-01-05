@@ -124,16 +124,15 @@ export default class AncientDices extends Phaser.Scene {
       this.createText("Cancelar", 100, 460);
 
       console.log(`Lado do dado selecionado: ${diceSide.name}`);
+
       this.sideDicesSelectedOnBattlefieldArray.push(diceSprite); // Adiciona o dado ao array
-      console.log(
-        "Array de dados selecionados:",
-        this.sideDicesSelectedOnBattlefieldArray
-      );
+
+      console.log("Array de dados selecionados:",this.sideDicesSelectedOnBattlefieldArray);
       console.log("e vc o que é:", diceSprite);
     });
 
     this.allHumanDicesArray.push(diceSprite);
-    console.log("todos os dados", this.allHumanDicesArray);
+    // console.log("todos os dados", this.allHumanDicesArray);
     return diceSprite;
   }
 
@@ -160,6 +159,7 @@ export default class AncientDices extends Phaser.Scene {
         if (text === "Cancelar" && localMenuGroup) {
           localMenuGroup.setVisible(false);
         } else if (text === "Selecionar" && localMenuGroup) {
+          console.log(this.allHumanDicesArray)
           // Pega o último dado criado (pode ser ajustado conforme necessário)
           const lastDice =
             this.sideDicesSelectedOnBattlefieldArray[
