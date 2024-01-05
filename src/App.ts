@@ -10,6 +10,7 @@ export default class AncientDices extends Phaser.Scene {
   private humanBattlefieldSlots: Phaser.GameObjects.Image[] = [];
   private aiRobotArmSlots: Phaser.GameObjects.Image[] = [];
   private humanRobotArmSlots: Phaser.GameObjects.Image[] = [];
+  private allHumanDicesArray: Phaser.GameObjects.Sprite[] = [];
 
   preload() {
     for (const diceName in diceArrays) {
@@ -115,15 +116,6 @@ export default class AncientDices extends Phaser.Scene {
     diceName: string
   ) {
     const diceKey = `${diceName}_${diceSide.name}`;
-    this.createDiceSprite(x, y, diceKey, diceSide.name);
-  }
-
-  private createDiceSprite(
-    x: number,
-    y: number,
-    diceKey: string,
-    diceSideName: string
-  ) {
     const diceSprite = this.add.sprite(x, y, diceKey).setInteractive();
     diceSprite.on("pointerdown", () => {
       this.menuGroup.setVisible(true);
@@ -131,11 +123,18 @@ export default class AncientDices extends Phaser.Scene {
       this.createText("Detalhes", 100, 440);
       this.createText("Cancelar", 100, 460);
 
-      console.log(`Lado do dado selecionado: ${diceSideName}`);
+      console.log(`Lado do dado selecionado: ${diceSide.name}`);
       this.sideDicesSelectedOnBattlefieldArray.push(diceSprite); // Adiciona o dado ao array
-      console.log('Array de dados selecionados:', this.sideDicesSelectedOnBattlefieldArray)
-      console.log('e vc o que é:', diceSprite)
+      console.log(
+        "Array de dados selecionados:",
+        this.sideDicesSelectedOnBattlefieldArray
+      );
+      console.log("e vc o que é:", diceSprite);
     });
+
+    this.allHumanDicesArray.push(diceSprite);
+    console.log("todos os dados", this.allHumanDicesArray);
+    return diceSprite;
   }
 
   private createText(text: string, x: number, y: number) {
@@ -162,7 +161,10 @@ export default class AncientDices extends Phaser.Scene {
           localMenuGroup.setVisible(false);
         } else if (text === "Selecionar" && localMenuGroup) {
           // Pega o último dado criado (pode ser ajustado conforme necessário)
-          const lastDice = this.sideDicesSelectedOnBattlefieldArray[this.sideDicesSelectedOnBattlefieldArray.length - 1];
+          const lastDice =
+            this.sideDicesSelectedOnBattlefieldArray[
+              this.sideDicesSelectedOnBattlefieldArray.length - 1
+            ];
 
           // Verifica se há slots disponíveis no campo de batalha
           if (
