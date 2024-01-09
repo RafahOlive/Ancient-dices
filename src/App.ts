@@ -30,8 +30,6 @@ export default class AncientDices extends Phaser.Scene {
     const finishTurnButton = this.add.rectangle(700, 300, 100, 50, 0x3498db);
     finishTurnButton.setInteractive();
 
-    //Quando apertamos o botão para passar o turno
-
     finishTurnButton.on("pointerdown", () => {
       finishTurnButton.setFillStyle(0xff3b3b);
       finishTurnButton.disableInteractive();
@@ -73,7 +71,8 @@ export default class AncientDices extends Phaser.Scene {
           const randomDiceSide = Phaser.Math.RND.pick(diceArray);
           const slot = this.humanRobotArmSlots[slotIndex];
           if (slot) {
-            this.spawnDiceOnSlot(slot.x, slot.y, randomDiceSide, diceName);
+            const diceSprite = this.spawnDiceOnSlot(slot.x, slot.y, randomDiceSide, diceName);
+            this.allHumanDicesArray.push(diceSprite)
           }
           slotIndex++;
           this.hasRolledDice = true;
@@ -93,13 +92,11 @@ export default class AncientDices extends Phaser.Scene {
     const diceSprite = this.add.sprite(x, y, diceKey).setInteractive();
     diceSprite.on("pointerdown", () => {
       this.menuGroup.setVisible(true);
-      this.createText("Selecionar", 100, 420);
-      this.createText("Detalhes", 100, 440);
-      this.createText("Cancelar", 100, 460);
+      this.createText("Selecionar", 100, 420, diceSprite);
+      this.createText("Detalhes", 100, 440, diceSprite);
+      this.createText("Cancelar", 100, 460, diceSprite);
 
       console.log(`Lado do dado selecionado: ${diceSide.name}`);
-
-      this.allHumanDicesArray.push(diceSprite);
       console.log("todos os dados", this.allHumanDicesArray);
     });
     return diceSprite;
@@ -118,7 +115,7 @@ export default class AncientDices extends Phaser.Scene {
     }
   }
 
-  private createText(text: string, x: number, y: number) {
+  private createText(text: string, x: number, y: number, diceSprite: Phaser.GameObjects.Sprite) {
     const menuText = this.add
       .text(x, y, text, {
         color: "#000000",
@@ -142,11 +139,6 @@ export default class AncientDices extends Phaser.Scene {
           localMenuGroup.setVisible(false);
         } else if (text === "Selecionar" && localMenuGroup) {
           console.log("todos os dados apos selecionar um dado", this.allHumanDicesArray);
-          // Pega o último dado criado (pode ser ajustado conforme necessário)
-          const lastDice =
-            this.allHumanDicesArray[
-              this.allHumanDicesArray.length - 1
-            ];
 
           // Verifica se há slots disponíveis no campo de batalha
           if (
@@ -155,10 +147,16 @@ export default class AncientDices extends Phaser.Scene {
             // Calcula a posição do próximo slot disponível
             const nextSlotIndex = this.humanBattlefieldDice.length;
             const nextSlot = this.humanBattlefieldSlots[nextSlotIndex];
-
+  
             // Move o dado para o próximo slot disponível
-            this.colocarNoCampo(lastDice, nextSlot.x, nextSlot.y);
-
+            this.colocarNoCampo(diceSprite, nextSlot.x, nextSlot.y);
+  
+            // Remove o dado do array allHumanDicesArray
+            const indexToRemove = this.allHumanDicesArray.indexOf(diceSprite);
+            if (indexToRemove !== -1) {
+              this.allHumanDicesArray.splice(indexToRemove, 1);
+            }
+  
             // Oculta o menuGroup
             localMenuGroup.setVisible(false);
           }
