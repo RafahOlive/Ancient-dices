@@ -1,9 +1,8 @@
 import Phaser from "phaser";
-import { diceArrays, DiceArrayItem } from "./diceData";
+import { diceArrays, DiceArrayItem, loadDiceImages } from "./diceData";
 
 export default class AncientDices extends Phaser.Scene {
   private menuGroup!: Phaser.GameObjects.Group;
-  private sideDicesSelectedOnBattlefieldArray: Phaser.GameObjects.Sprite[] = [];
   private isPlayerTurn: boolean = true;
   private hasRolledDice: boolean = false;
   private humanBattlefieldDice: Phaser.GameObjects.Sprite[] = [];
@@ -14,7 +13,7 @@ export default class AncientDices extends Phaser.Scene {
 
   preload() {
     for (const diceName in diceArrays) {
-      this.loadDiceImages(diceName, diceArrays[diceName]);
+      loadDiceImages(this, diceName, diceArrays[diceName]);
     }
 
     // RobotArm Interactives
@@ -100,16 +99,9 @@ export default class AncientDices extends Phaser.Scene {
 
       console.log(`Lado do dado selecionado: ${diceSide.name}`);
 
-      this.sideDicesSelectedOnBattlefieldArray.push(diceSprite); // Adiciona o dado ao array
-
-      console.log(
-        "Array de dados selecionados:",
-        this.sideDicesSelectedOnBattlefieldArray
-      );
+      this.allHumanDicesArray.push(diceSprite);
+      console.log("todos os dados", this.allHumanDicesArray);
     });
-
-    this.allHumanDicesArray.push(diceSprite);
-    console.log("todos os dados", this.allHumanDicesArray);
     return diceSprite;
   }
 
@@ -124,15 +116,6 @@ export default class AncientDices extends Phaser.Scene {
       }
       slotIndex++;
     }
-  }
-
-  private loadDiceImages(diceName: string, diceArray: DiceArrayItem[]) {
-    diceArray.forEach((item) => {
-      this.load.image(
-        `${diceName}_${item.name}`,
-        `src/assets/SideDices/${item.imagePath}`
-      );
-    });
   }
 
   private createText(text: string, x: number, y: number) {
@@ -161,8 +144,8 @@ export default class AncientDices extends Phaser.Scene {
           console.log("todos os dados apos selecionar um dado", this.allHumanDicesArray);
           // Pega o último dado criado (pode ser ajustado conforme necessário)
           const lastDice =
-            this.sideDicesSelectedOnBattlefieldArray[
-              this.sideDicesSelectedOnBattlefieldArray.length - 1
+            this.allHumanDicesArray[
+              this.allHumanDicesArray.length - 1
             ];
 
           // Verifica se há slots disponíveis no campo de batalha

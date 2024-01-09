@@ -63,3 +63,12 @@ export interface DiceArrayItem {
 // dice 4 : 2 melee, ranged, blessedDefMelee, defRanged, blessedThief
 // dice 5 : 2 melee, blessedRanged, defMelee, BlessedDefRanged, thief
 // dice 6 : 2 melee, ranged, blessedDefMelee, blessedDefRanged, thief
+
+export function loadDiceImages(scene: Phaser.Scene, diceName: string, diceArray: DiceArrayItem[]) {
+  diceArray.forEach((item) => {
+    scene.load.image(
+      `${diceName}_${item.name}`,
+      `src/assets/SideDices/${item.imagePath}`
+    );
+  });
+}
