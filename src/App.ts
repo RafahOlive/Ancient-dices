@@ -3,14 +3,19 @@ import { diceArrays, DiceArrayItem, loadDiceImages } from "./diceData";
 
 export default class AncientDices extends Phaser.Scene {
   private menuGroup!: Phaser.GameObjects.Group;
+
   private isPlayerTurn: boolean = true;
   private hasRolledDice: boolean = false;
 
-  private humanRobotArmSlots: Phaser.GameObjects.Image[] = [];
-  private humanBattlefieldDice: Phaser.GameObjects.Sprite[] = [];
-  private humanBattlefieldSlots: Phaser.GameObjects.Image[] = [];
+  private turnCounter: number = 1;
+  private turnText:  Phaser.GameObjects.Text
 
+  private humanRobotArmSlots: Phaser.GameObjects.Image[] = [];
   private aiRobotArmSlots: Phaser.GameObjects.Image[] = [];
+
+  private humanBattlefieldDice: Phaser.GameObjects.Sprite[] = [];
+ 
+  private humanBattlefieldSlots: Phaser.GameObjects.Image[] = [];
   private aiBattlefieldSlots: Phaser.GameObjects.Image[] = [];
 
   private allHumanDicesArray: Phaser.GameObjects.Sprite[] = [];
@@ -32,24 +37,9 @@ export default class AncientDices extends Phaser.Scene {
     this.add.image(570, 100, "roboticArm");
     this.add.rectangle(350, 300, 400, 200, 0x3498db);
 
-    const finishTurnButton = this.add.rectangle(700, 300, 100, 50, 0x3498db);
-    finishTurnButton.setInteractive();
-
-    finishTurnButton.on("pointerdown", () => {
-      finishTurnButton.setFillStyle(0xff3b3b);
-      finishTurnButton.disableInteractive();
-      // setTimeout(() => {
-      //   this.aiRollDice();
-      // }, 1000)
-
-      setTimeout(() => {
-        this.aiRollDiceExample()
-      }, 1000)
-
-      setTimeout(() => {
-        this.moveAiDicesToBattlefield();
-      },2000)
-
+    this.turnText = this.add.text(16, 16, `Turno: ${this.turnCounter}`, {
+      fontSize: "20px",
+      color: "#fff"
     });
 
     for (let i = 0; i < 6; i++) {
@@ -95,7 +85,37 @@ export default class AncientDices extends Phaser.Scene {
       }
     });
     this.menuGroup = this.add.group().setVisible(false);
+
+    const finishTurnButton = this.add.rectangle(700, 300, 100, 50, 0x3498db);
+    finishTurnButton.setInteractive();
+
+    finishTurnButton.on("pointerdown", () => {
+      finishTurnButton.setFillStyle(0xff3b3b);
+      finishTurnButton.disableInteractive();
+      this.allHumanDicesArray.forEach(sprite => sprite.destroy());
+      // Limpar o array
+      this.allHumanDicesArray = [];
+      // setTimeout(() => {
+      //   this.aiRollDice();
+      // }, 1000)
+
+      setTimeout(() => {
+        this.aiRollDiceExample()
+      }, 1000)
+
+      setTimeout(() => {
+        this.moveAiDicesToBattlefield();
+      },2000)
+
+      console.log("todos os dados após finalizar o turno inimigo", this.allHumanDicesArray);
+    });
   }
+
+  playerFinishTurn() {
+    
+  }
+
+  
 
   private spawnDiceOnSlot(
     x: number,
