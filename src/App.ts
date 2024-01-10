@@ -4,6 +4,8 @@ import { diceArrays, DiceArrayItem, loadDiceImages } from "./diceData";
 export default class AncientDices extends Phaser.Scene {
   private menuGroup!: Phaser.GameObjects.Group;
 
+  private finishTurnButton!: Phaser.GameObjects.Rectangle;
+
   private isPlayerTurn: boolean = true;
   private hasRolledDice: boolean = false;
 
@@ -86,19 +88,11 @@ export default class AncientDices extends Phaser.Scene {
     });
     this.menuGroup = this.add.group().setVisible(false);
 
-    const finishTurnButton = this.add.rectangle(700, 300, 100, 50, 0x3498db);
-    finishTurnButton.setInteractive();
+    this.finishTurnButton = this.add.rectangle(700, 300, 100, 50, 0x3498db).setInteractive();
 
-    finishTurnButton.on("pointerdown", () => {
-      finishTurnButton.setFillStyle(0xff3b3b);
-      finishTurnButton.disableInteractive();
-      this.allHumanDicesArray.forEach(sprite => sprite.destroy());
-      // Limpar o array
-      this.allHumanDicesArray = [];
-      // setTimeout(() => {
-      //   this.aiRollDice();
-      // }, 1000)
-
+    this.finishTurnButton.on("pointerdown", () => {
+      this.disableFinishButton();
+      this.clearRemainingDices();
       setTimeout(() => {
         this.aiRollDiceExample()
       }, 1000)
@@ -107,12 +101,25 @@ export default class AncientDices extends Phaser.Scene {
         this.moveAiDicesToBattlefield();
       },2000)
 
-      console.log("todos os dados após finalizar o turno inimigo", this.allHumanDicesArray);
+      setTimeout(() => {
+        this.enableFinishButton();
+      },3000)
     });
   }
 
-  playerFinishTurn() {
-    
+  clearRemainingDices() {
+    this.allHumanDicesArray.forEach(sprite => sprite.destroy());
+    this.allHumanDicesArray = [];
+    console.log("todos os dados após finalizar o turno inimigo", this.allHumanDicesArray);
+  }
+
+  disableFinishButton(){
+    this.finishTurnButton.setFillStyle(0xff3b3b);
+    this.finishTurnButton.disableInteractive();
+  }
+  enableFinishButton(){
+    this.finishTurnButton.setFillStyle(0x3498db);
+    this.finishTurnButton.setInteractive();
   }
 
   
