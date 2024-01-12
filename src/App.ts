@@ -89,7 +89,8 @@ export default class AncientDices extends Phaser.Scene {
             const slot = this.humanRobotArmSlots[slotIndex];
 
             if (slot) {
-              this.spawnDiceOnSlot(slot.x, slot.y, randomDiceSide, diceName);
+              const diceSprite = this.spawnDiceOnSlot(slot.x, slot.y, randomDiceSide, diceName);
+              this.allHumanDicesArray.push(diceSprite);
             }
           }
         }
@@ -165,8 +166,6 @@ export default class AncientDices extends Phaser.Scene {
   ) {
     const diceKey = `${diceName}_${diceSide.name}`;
     const diceSprite = this.add.sprite(x, y, diceKey).setInteractive();
-    diceSprite.setData('selected', false);
-    console.log(`Dado ${diceName} criado. Valor atual de isSelected: ${diceSprite.getData('selected')}`);
     const menuGroup = this.menuGroup;
     diceSprite.on("pointerdown", () => {
       menuGroup.setVisible(true);
@@ -261,8 +260,6 @@ export default class AncientDices extends Phaser.Scene {
             const nextSlotIndex = this.humanBattlefieldDice.length;
             const nextSlot = this.humanBattlefieldSlots[nextSlotIndex];
 
-            // diceSprite.setData('selected', true);
-            // console.log(`Dado ${diceName} selecionado: ${diceSprite.getData('selected')}`);
             this.putDiceOnBattlefield(diceSprite, nextSlot.x, nextSlot.y);
             this.allHumanDicesArrayVerification[nextSlotIndex] = true;
 
