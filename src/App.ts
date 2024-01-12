@@ -118,7 +118,6 @@ export default class AncientDices extends Phaser.Scene {
     this.finishTurnButton = this.add.rectangle(700, 300, 100, 50, 0x3498db).setInteractive();
 
     this.finishTurnButton.on("pointerdown", () => {
-
       this.disableFinishButton();
       this.clearRemainingDices();
       setTimeout(() => {
@@ -133,10 +132,6 @@ export default class AncientDices extends Phaser.Scene {
         this.enableFinishButton();
       }, 3000)
     });
-  }
-
-  updateTurnText() {
-    this.turnText.setText(`Turno: ${this.turnCounter}`);
   }
 
   clearRemainingDices() {
@@ -155,7 +150,11 @@ export default class AncientDices extends Phaser.Scene {
     this.hasRolledDice = false;
     this.rollDicesButton.setAlpha(1)
     this.turnCounter++;
+    this.updateTurnText();
+  }
 
+  updateTurnText() {
+    this.turnText.setText(`Turno: ${this.turnCounter}`);
   }
 
   private spawnDiceOnSlot(
