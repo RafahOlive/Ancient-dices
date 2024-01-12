@@ -5,23 +5,26 @@ export default class AncientDices extends Phaser.Scene {
   private menuGroup!: Phaser.GameObjects.Group;
 
   private finishTurnButton!: Phaser.GameObjects.Rectangle;
+  private rollDicesButton!: Phaser.GameObjects.Image;
 
   private isPlayerTurn: boolean = true;
   private hasRolledDice: boolean = false;
 
   private turnCounter: number = 1;
-  private turnText:  Phaser.GameObjects.Text
+  private turnText: Phaser.GameObjects.Text
 
   private humanRobotArmSlots: Phaser.GameObjects.Image[] = [];
   private aiRobotArmSlots: Phaser.GameObjects.Image[] = [];
 
   private humanBattlefieldDice: Phaser.GameObjects.Sprite[] = [];
- 
+
   private humanBattlefieldSlots: Phaser.GameObjects.Image[] = [];
   private aiBattlefieldSlots: Phaser.GameObjects.Image[] = [];
 
   private allHumanDicesArray: Phaser.GameObjects.Sprite[] = [];
-  private allAIDicesArray : Phaser.GameObjects.Sprite[] =[];
+  private allAIDicesArray: Phaser.GameObjects.Sprite[] = [];
+
+  private allHumanDicesArrayVerification: boolean[] = [];
 
   preload() {
     for (const diceName in diceArrays) {
@@ -35,6 +38,8 @@ export default class AncientDices extends Phaser.Scene {
   }
 
   create() {
+    this.allHumanDicesArrayVerification = new Array(6).fill(false);
+
     this.add.image(230, 500, "roboticArm");
     this.add.image(570, 100, "roboticArm");
     this.add.rectangle(350, 300, 400, 200, 0x3498db);
@@ -64,33 +69,56 @@ export default class AncientDices extends Phaser.Scene {
       this.aiBattlefieldSlots.push(slot);
     }
 
-    // Button onclick spawn a SideDice on Robotic arm
-    const rollButton = this.add.image(500, 500, "roll").setInteractive();
-    rollButton.on("pointerdown", () => {
-      if (!this.isPlayerTurn) {
+    this.rollDicesButton = this.add.image(500, 500, "roll").setInteractive();
+    this.rollDicesButton.on("pointerdown", () => {
+      if (!this.isPlayerTurn || (this.isPlayerTurn && this.hasRolledDice)) {
         return;
-      } else if (this.isPlayerTurn && this.hasRolledDice) {
-        return;
-      } else if (this.isPlayerTurn && !this.hasRolledDice) {
-        let slotIndex = 0;
-        for (const diceName in diceArrays) {
-          const diceArray = diceArrays[diceName];
+      }
+
+      let slotIndex = 0;
+
+      for (const diceName in diceArrays) {
+        const diceArray = diceArrays[diceName];
+
+        // Lógica para os turnos 2 e 3
+        if (this.turnCounter === 2 || this.turnCounter === 3) {
+          const isSelected = this.allHumanDicesArrayVerification[slotIndex];
+
+          if (isSelected === false) {
+            const randomDiceSide = Phaser.Math.RND.pick(diceArray);
+            const slot = this.humanRobotArmSlots[slotIndex];
+
+            if (slot) {
+              this.spawnDiceOnSlot(slot.x, slot.y, randomDiceSide, diceName);
+            }
+          }
+        }
+
+        // Lógica para o turno 1
+        if (this.turnCounter === 1) {
           const randomDiceSide = Phaser.Math.RND.pick(diceArray);
           const slot = this.humanRobotArmSlots[slotIndex];
+
           if (slot) {
             const diceSprite = this.spawnDiceOnSlot(slot.x, slot.y, randomDiceSide, diceName);
-            this.allHumanDicesArray.push(diceSprite)
+            this.allHumanDicesArray.push(diceSprite);
+            this.allHumanDicesArrayVerification.push(diceSprite);
           }
-          slotIndex++;
-          this.hasRolledDice = true;
         }
+        slotIndex++;
       }
+
+      this.hasRolledDice = true;
+      this.rollDicesButton.setAlpha(0.2);
     });
+
+
     this.menuGroup = this.add.group().setVisible(false);
 
     this.finishTurnButton = this.add.rectangle(700, 300, 100, 50, 0x3498db).setInteractive();
 
     this.finishTurnButton.on("pointerdown", () => {
+
       this.disableFinishButton();
       this.clearRemainingDices();
       setTimeout(() => {
@@ -99,12 +127,16 @@ export default class AncientDices extends Phaser.Scene {
 
       setTimeout(() => {
         this.moveAiDicesToBattlefield();
-      },2000)
+      }, 2000)
 
       setTimeout(() => {
         this.enableFinishButton();
-      },3000)
+      }, 3000)
     });
+  }
+
+  updateTurnText() {
+    this.turnText.setText(`Turno: ${this.turnCounter}`);
   }
 
   clearRemainingDices() {
@@ -113,32 +145,36 @@ export default class AncientDices extends Phaser.Scene {
     console.log("todos os dados após finalizar o turno inimigo", this.allHumanDicesArray);
   }
 
-  disableFinishButton(){
+  disableFinishButton() {
     this.finishTurnButton.setFillStyle(0xff3b3b);
     this.finishTurnButton.disableInteractive();
   }
-  enableFinishButton(){
+  enableFinishButton() {
     this.finishTurnButton.setFillStyle(0x3498db);
     this.finishTurnButton.setInteractive();
-  }
+    this.hasRolledDice = false;
+    this.rollDicesButton.setAlpha(1)
+    this.turnCounter++;
 
-  
+  }
 
   private spawnDiceOnSlot(
     x: number,
     y: number,
     diceSide: DiceArrayItem,
     diceName: string
-  ){
+  ) {
     const diceKey = `${diceName}_${diceSide.name}`;
     const diceSprite = this.add.sprite(x, y, diceKey).setInteractive();
+    diceSprite.setData('selected', false);
+    console.log(`Dado ${diceName} criado. Valor atual de isSelected: ${diceSprite.getData('selected')}`);
+    const menuGroup = this.menuGroup;
     diceSprite.on("pointerdown", () => {
-      this.menuGroup.setVisible(true);
-      this.createText("Selecionar", 100, 420, diceSprite);
-      this.createText("Detalhes", 100, 440, diceSprite);
-      this.createText("Cancelar", 100, 460, diceSprite);
+      menuGroup.setVisible(true);
+      this.createText("Selecionar", 100, 420, diceSprite, diceName);
+      this.createText("Detalhes", 100, 440, diceSprite, diceName);
+      this.createText("Cancelar", 100, 460, diceSprite, diceName);
 
-      console.log(`Lado do dado selecionado: ${diceSide.name}`);
       console.log("todos os dados", this.allHumanDicesArray);
     });
     return diceSprite;
@@ -161,14 +197,14 @@ export default class AncientDices extends Phaser.Scene {
     let slotIndex = 0;
     for (const diceName in diceArrays) {
       const diceArray = diceArrays[diceName];
-        const meleeDice = diceArray.find((dice) => dice.name.includes("Melee"));
-        const slot = this.aiRobotArmSlots[slotIndex];
-        if (slot) {
-          const resultDice = this.aiSpawnDiceOnSlot(slot.x, slot.y, meleeDice, diceName);
-          this.allAIDicesArray.push(resultDice)
-        }
-        slotIndex++;
-        console.log('dados do iniimgo:', this.allAIDicesArray)
+      const meleeDice = diceArray.find((dice) => dice.name.includes("Melee"));
+      const slot = this.aiRobotArmSlots[slotIndex];
+      if (slot) {
+        const resultDice = this.aiSpawnDiceOnSlot(slot.x, slot.y, meleeDice, diceName);
+        this.allAIDicesArray.push(resultDice)
+      }
+      slotIndex++;
+      console.log('dados do iniimgo:', this.allAIDicesArray)
     }
   }
 
@@ -178,14 +214,14 @@ export default class AncientDices extends Phaser.Scene {
     return diceSprite;
   }
 
-  moveAiDicesToBattlefield(){
+  moveAiDicesToBattlefield() {
     for (let i = 0; i < this.aiRobotArmSlots.length; i++) {
       const slot = this.aiBattlefieldSlots[i];
       const diceSprite = this.allAIDicesArray[i];
-  
+
       if (slot && diceSprite) {
-        this.moveDiceToSlot(diceSprite, slot.x, slot.y);
-  
+        this.moveAiDicesToSlot(diceSprite, slot.x, slot.y);
+
         const indexToRemove = this.aiRobotArmSlots.indexOf(diceSprite);
         if (indexToRemove !== -1) {
           this.allAIDicesArray.splice(indexToRemove, 1);
@@ -194,7 +230,7 @@ export default class AncientDices extends Phaser.Scene {
     }
   }
 
-  moveDiceToSlot(
+  moveAiDicesToSlot(
     diceSprite: Phaser.GameObjects.Sprite,
     slotX: number,
     slotY: number
@@ -203,7 +239,7 @@ export default class AncientDices extends Phaser.Scene {
     diceSprite.y = slotY;
   }
 
-  private createText(text: string, x: number, y: number, diceSprite: Phaser.GameObjects.Sprite) {
+  private createText(text: string, x: number, y: number, diceSprite: Phaser.GameObjects.Sprite, diceName: string) {
     const menuText = this.add
       .text(x, y, text, {
         color: "#000000",
@@ -216,36 +252,29 @@ export default class AncientDices extends Phaser.Scene {
         },
         fontSize: 12,
         lineSpacing: 10,
-      })
-      .setOrigin(0.5, 0.5)
-      .setInteractive()
-      .on("pointerdown", () => {
-        console.log(`${text} clicado!`);
+      }).setOrigin(0.5, 0.5).setInteractive().on("pointerdown", () => {
         const localMenuGroup = this.menuGroup;
 
         if (text === "Cancelar" && localMenuGroup) {
           localMenuGroup.setVisible(false);
         } else if (text === "Selecionar" && localMenuGroup) {
-          // Verifica se há slots disponíveis no campo de batalha
-          if (
-            this.humanBattlefieldDice.length < this.humanBattlefieldSlots.length
-          ) {
-            // Calcula a posição do próximo slot disponível
+          if (this.humanBattlefieldDice.length < this.humanBattlefieldSlots.length) {
             const nextSlotIndex = this.humanBattlefieldDice.length;
             const nextSlot = this.humanBattlefieldSlots[nextSlotIndex];
-  
-            // Move o dado para o próximo slot disponível
-            this.colocarNoCampo(diceSprite, nextSlot.x, nextSlot.y);
-  
-            // Remove o dado do array allHumanDicesArray
+
+            // diceSprite.setData('selected', true);
+            // console.log(`Dado ${diceName} selecionado: ${diceSprite.getData('selected')}`);
+            this.putDiceOnBattlefield(diceSprite, nextSlot.x, nextSlot.y);
+            this.allHumanDicesArrayVerification[nextSlotIndex] = true;
+
             const indexToRemove = this.allHumanDicesArray.indexOf(diceSprite);
             if (indexToRemove !== -1) {
               this.allHumanDicesArray.splice(indexToRemove, 1);
             }
-  
-            // Oculta o menuGroup
             localMenuGroup.setVisible(false);
-            console.log("todos os dados apos selecionar um dado", this.allHumanDicesArray);
+            console.log("todos os dados após selecionar um dado", this.allHumanDicesArrayVerification);
+            console.log("todos os dados após selecionar um dado (array de criação)", this.allHumanDicesArray);
+
           }
         }
       });
@@ -253,7 +282,7 @@ export default class AncientDices extends Phaser.Scene {
     this.menuGroup.add(menuText);
   }
 
-  colocarNoCampo(
+  putDiceOnBattlefield(
     diceSprite: Phaser.GameObjects.Sprite,
     slotX: number,
     slotY: number
