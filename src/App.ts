@@ -29,6 +29,8 @@ export default class AncientDices extends Phaser.Scene {
 
   private humanHealth: number = 20;
   private aiHealth: number = 20;
+  private humanHealthText: Phaser.GameObjects.Text;
+  private aiHealthText: Phaser.GameObjects.Text;
 
   private humanBless: number = 0;
   private aiBless: number = 0;
@@ -50,6 +52,16 @@ export default class AncientDices extends Phaser.Scene {
     this.add.image(230, 500, "roboticArm");
     this.add.image(570, 100, "roboticArm");
     this.add.rectangle(350, 300, 400, 200, 0x3498db);
+
+    this.humanHealthText = this.add.text(30, 530, `Sua vida: ${this.humanHealth}`, {
+      fontSize: '20px',
+      color: '#fff'
+    });
+    
+    this.aiHealthText = this.add.text(630, 50, `Inimigo: ${this.aiHealth}`, {
+      fontSize: '20px',
+      color: '#fff'
+    });
 
     this.turnText = this.add.text(16, 16, `Turno: ${this.turnCounter}`, {
       fontSize: "20px",
@@ -163,6 +175,11 @@ export default class AncientDices extends Phaser.Scene {
         }, 3000);
       }
     });
+  }
+
+  private updateHealthText() {
+    this.humanHealthText.setText(`Human Health: ${this.humanHealth}`);
+    this.aiHealthText.setText(`AI Health: ${this.aiHealth}`);
   }
 
   clearRemainingDices() {
@@ -422,7 +439,8 @@ export default class AncientDices extends Phaser.Scene {
     console.log("Differences - Human Melee:", humanMeleeDifference, "Ranged:", humanRangedDifference);
     console.log("Differences - AI Melee:", aiMeleeDifference, "Ranged:", aiRangedDifference);
 
-    console.log("EUREKAAAAAA")
+    console.log("EUREKAAAAAA");
+    this.updateHealthText();
   }
 
   private humanTotalDamage(type: string): number {
