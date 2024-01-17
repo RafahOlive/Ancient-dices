@@ -35,7 +35,13 @@ export default class AncientDices extends Phaser.Scene {
   private humanBless: number = 0;
   private aiBless: number = 0;
 
+  // private gradient: Phaser.GameObjects.Graphics;
+
   preload() {
+    this.load.image("BGBase", "src/assets/Background/Base.png");
+    this.load.image("BGCircuit", "src/assets/Background/Circuits.png");
+    this.load.image("archer", "src/assets/SideDices/ARQUEIRO.png");
+
     for (const diceName in diceArrays) {
       loadDiceImages(this, diceName, diceArrays[diceName]);
     }
@@ -43,24 +49,37 @@ export default class AncientDices extends Phaser.Scene {
     // RobotArm Interactives
     this.load.image("roll", "src/assets/RoboticArm/Roll.png");
     this.load.image("roboticArm", "src/assets/RoboticArm/RoboticArm.png");
+    this.load.image("roboticArmCircuit", "src/assets/RoboticArm/RoboticArmCircuits.png");
     this.load.image("slot", "src/assets/RoboticArm/Slot.png");
   }
 
   create() {
-    this.allHumanDicesArrayVerification = new Array(6).fill(false);
+    // this.scale.scaleMode = Phaser.Scale.ScaleModes.FIT;
+    this.scale.setGameSize(1920, 1090);
 
-    this.add.image(230, 500, "roboticArm");
-    this.add.image(570, 100, "roboticArm");
-    this.add.rectangle(350, 300, 400, 200, 0x3498db);
+    this.add.image(0, 0, "BGBase").setOrigin(0, 0).setScale(0.7);
+    this.add.image(0, 0, "BGCircuit").setOrigin(0, 0).setScale(0.7);
 
-    this.humanHealthText = this.add.text(30, 530, `Sua vida: ${this.humanHealth}`, {
-      fontSize: '20px',
-      color: '#fff'
-    });
+    //Braço do Humano
+    this.add.image(650, 640, "roboticArm").setScale(0.8);
+    this.add.image(650, 640, "roboticArmCircuit").setScale(0.8);
     
+    //Braço da IA
+    this.add.image(650, 100, "roboticArm").setFlipX(true).setFlipY(true).setScale(0.8);
+    this.add.image(650, 100, "roboticArmCircuit").setFlipX(true).setFlipY(true).setScale(0.8);
+
+    this.add.image(650,640, "archer");
+
+    this.humanHealthText = this.add.text(30,530,`Sua vida: ${this.humanHealth}`,
+      {
+        fontSize: "20px",
+        color: "#fff",
+      }
+    );
+
     this.aiHealthText = this.add.text(630, 50, `Inimigo: ${this.aiHealth}`, {
-      fontSize: '20px',
-      color: '#fff'
+      fontSize: "20px",
+      color: "#fff",
     });
 
     this.turnText = this.add.text(16, 16, `Turno: ${this.turnCounter}`, {
@@ -87,6 +106,8 @@ export default class AncientDices extends Phaser.Scene {
       const slot = this.add.image(200 + i * 50, 240, "slot");
       this.aiBattlefieldSlots.push(slot);
     }
+
+    this.allHumanDicesArrayVerification = new Array(6).fill(false);
 
     this.rollDicesButton = this.add.image(500, 500, "roll").setInteractive();
     this.rollDicesButton.on("pointerdown", () => {
@@ -151,15 +172,15 @@ export default class AncientDices extends Phaser.Scene {
     this.finishTurnButton.on("pointerdown", () => {
       this.disableFinishButton();
       this.clearRemainingDices();
-      if(this.turnCounter === 3){
+      if (this.turnCounter === 3) {
         this.resolveDuel();
-      } 
-      else
-      if (this.aiBattlefieldDice.length >= this.aiBattlefieldSlots.length) {
+      } else if (
+        this.aiBattlefieldDice.length >= this.aiBattlefieldSlots.length
+      ) {
         setTimeout(() => {
           this.enableFinishButton();
         }, 2000);
-        console.log("FUNCIONEI! TODOS DADOS IA RODADOS")
+        console.log("FUNCIONEI! TODOS DADOS IA RODADOS");
         return;
       } else {
         setTimeout(() => {
@@ -185,7 +206,10 @@ export default class AncientDices extends Phaser.Scene {
   clearRemainingDices() {
     this.allHumanDicesArray.forEach((sprite) => sprite.destroy());
     this.allHumanDicesArray = [];
-    console.log("todos os dados após finalizar o turno inimigo",this.allHumanDicesArray);
+    console.log(
+      "todos os dados após finalizar o turno inimigo",
+      this.allHumanDicesArray
+    );
   }
 
   disableFinishButton() {
@@ -251,7 +275,12 @@ export default class AncientDices extends Phaser.Scene {
       const meleeDice = diceArray.find((dice) => dice.name.includes("Melee"));
       const slot = this.aiRobotArmSlots[slotIndex];
       if (slot) {
-        const resultDice = this.aiSpawnDiceOnSlot(slot.x,slot.y,meleeDice,diceName);
+        const resultDice = this.aiSpawnDiceOnSlot(
+          slot.x,
+          slot.y,
+          meleeDice,
+          diceName
+        );
         this.allAIDicesArray.push(resultDice);
       }
       slotIndex++;
@@ -393,28 +422,26 @@ export default class AncientDices extends Phaser.Scene {
 
     // Verifica se this.aiBattlefieldDice está definido e não é vazio
     if (this.aiBattlefieldDice && this.aiBattlefieldDice.length > 0) {
-        for (const diceInfo of this.aiBattlefieldDice) {
-            // Verifica se diceInfo.sprite está definido antes de acessar suas propriedades
-            if (diceInfo.sprite) {
-                const diceSprite = diceInfo.sprite;
-                const diceName = diceSprite.texture.key; // Obtém o nome do lado do dado a partir do texture key
+      for (const diceInfo of this.aiBattlefieldDice) {
+        // Verifica se diceInfo.sprite está definido antes de acessar suas propriedades
+        if (diceInfo.sprite) {
+          const diceSprite = diceInfo.sprite;
+          const diceName = diceSprite.texture.key; // Obtém o nome do lado do dado a partir do texture key
 
-                // Verifica se o lado do dado já existe no objeto totalDamageBySide
-                if (totalDamageBySide[diceName]) {
-                    totalDamageBySide[diceName] += 1; // Se existir, adiciona 1 ao valor existente
-                } else {
-                    totalDamageBySide[diceName] = 1; // Se não existir, inicializa com 1
-                }
-            }
+          // Verifica se o lado do dado já existe no objeto totalDamageBySide
+          if (totalDamageBySide[diceName]) {
+            totalDamageBySide[diceName] += 1; // Se existir, adiciona 1 ao valor existente
+          } else {
+            totalDamageBySide[diceName] = 1; // Se não existir, inicializa com 1
+          }
         }
+      }
     }
 
     return totalDamageBySide;
-}
-
+  }
 
   private resolveDuel() {
-
     const humanMeleeDamage = this.humanTotalDamage("Melee");
     const humanRangedDamage = this.humanTotalDamage("Ranged");
     // const humanThiefDamage = this.calculateTotalDamage("Thief");
@@ -436,8 +463,18 @@ export default class AncientDices extends Phaser.Scene {
     this.applyDamageToIA(humanMeleeDifference, humanRangedDifference);
     this.applyDamageToHuman(aiMeleeDifference, aiRangedDifference);
 
-    console.log("Differences - Human Melee:", humanMeleeDifference, "Ranged:", humanRangedDifference);
-    console.log("Differences - AI Melee:", aiMeleeDifference, "Ranged:", aiRangedDifference);
+    console.log(
+      "Differences - Human Melee:",
+      humanMeleeDifference,
+      "Ranged:",
+      humanRangedDifference
+    );
+    console.log(
+      "Differences - AI Melee:",
+      aiMeleeDifference,
+      "Ranged:",
+      aiRangedDifference
+    );
 
     console.log("EUREKAAAAAA");
     this.updateHealthText();
@@ -450,8 +487,8 @@ export default class AncientDices extends Phaser.Scene {
       const diceSprite = diceInfo.sprite;
       const diceName = diceSprite.texture.key;
 
-      if (diceName.includes(type)&& !diceName.includes("Def")) {
-        totalDamage += 1; 
+      if (diceName.includes(type) && !diceName.includes("Def")) {
+        totalDamage += 1;
       }
     }
     return totalDamage;
@@ -465,7 +502,7 @@ export default class AncientDices extends Phaser.Scene {
       const diceName = diceSprite.texture.key;
 
       if (diceName.includes(type)) {
-        totalDefense += 1; 
+        totalDefense += 1;
       }
     }
     return totalDefense;
@@ -505,15 +542,15 @@ export default class AncientDices extends Phaser.Scene {
 
     const totalDamageToIA = meleeDamageToIA + rangedDamageToIA;
     this.reduceIAHealth(totalDamageToIA);
-}
+  }
 
-private applyDamageToHuman(meleeDamage: number, rangedDamage: number) {
+  private applyDamageToHuman(meleeDamage: number, rangedDamage: number) {
     const meleeDamageToHuman = Math.max(0, meleeDamage);
     const rangedDamageToHuman = Math.max(0, rangedDamage);
 
     const totalDamageToHuman = meleeDamageToHuman + rangedDamageToHuman;
     this.reduceHumanHealth(totalDamageToHuman);
-}
+  }
 
   private reduceIAHealth(damage: number) {
     this.aiHealth -= damage;
