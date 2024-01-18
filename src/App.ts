@@ -1,7 +1,10 @@
 import Phaser from "phaser";
 import { diceArrays, DiceArrayItem, loadDiceImages } from "./diceData";
+import { AIManager } from "./AI";
 
 export default class AncientDices extends Phaser.Scene {
+  private aiManager: AIManager;
+
   private menuGroup!: Phaser.GameObjects.Group;
 
   private finishTurnButton!: Phaser.GameObjects.Rectangle;
@@ -13,14 +16,13 @@ export default class AncientDices extends Phaser.Scene {
   private turnCounter: number = 1;
   private turnText: Phaser.GameObjects.Text;
 
-  private humanRobotArmSlots: Phaser.GameObjects.Image[] = [];
   private aiRobotArmSlots: Phaser.GameObjects.Image[] = [];
 
   private humanBattlefieldDice: Phaser.GameObjects.Sprite[] = [];
   private aiBattlefieldDice: Phaser.GameObjects.Sprite[] = [];
 
-  private humanBattlefieldSlots: Phaser.GameObjects.Image[] = [];
-  private aiBattlefieldSlots: Phaser.GameObjects.Image[] = [];
+  private humanBattlefieldSlots: Phaser.GameObjects.Rectangle[] = [];
+  private aiBattlefieldSlots: Phaser.GameObjects.Rectangle[] = [];
 
   private allHumanDicesArray: Phaser.GameObjects.Sprite[] = [];
   private allAIDicesArray: Phaser.GameObjects.Sprite[] = [];
@@ -40,7 +42,6 @@ export default class AncientDices extends Phaser.Scene {
   preload() {
     this.load.image("BGBase", "src/assets/Background/Base.png");
     this.load.image("BGCircuit", "src/assets/Background/Circuits.png");
-    this.load.image("archer", "src/assets/SideDices/ARQUEIRO.png");
 
     for (const diceName in diceArrays) {
       loadDiceImages(this, diceName, diceArrays[diceName]);
@@ -50,27 +51,54 @@ export default class AncientDices extends Phaser.Scene {
     this.load.image("roll", "src/assets/RoboticArm/Roll.png");
     this.load.image("roboticArm", "src/assets/RoboticArm/RoboticArm.png");
     this.load.image("roboticArmCircuit", "src/assets/RoboticArm/RoboticArmCircuits.png");
-    this.load.image("slot", "src/assets/RoboticArm/Slot.png");
   }
 
   create() {
     // this.scale.scaleMode = Phaser.Scale.ScaleModes.FIT;
     this.scale.setGameSize(1920, 1090);
 
+    this.aiManager = new AIManager(this, this.aiRobotArmSlots, this.allAIDicesArray)
+
     this.add.image(0, 0, "BGBase").setOrigin(0, 0).setScale(0.7);
     this.add.image(0, 0, "BGCircuit").setOrigin(0, 0).setScale(0.7);
 
     //Braço do Humano
-    this.add.image(650, 640, "roboticArm").setScale(0.8);
-    this.add.image(650, 640, "roboticArmCircuit").setScale(0.8);
-    
+    const roboArm = this.add.image(650, 640, "roboticArm").setScale(0.8).setRotation(Phaser.Math.DegToRad(-4))
+    const roboArmCirc = this.add.image(650, 640, "roboticArmCircuit").setScale(0.8).setRotation(Phaser.Math.DegToRad(-4))
+
+    function playDamageAnimation() {
+      // const damageTween = this.tweens.createTimeline();
+      this.tweens.add({
+        targets: [roboArmCirc, roboArm],
+        duration: 50,
+        ease: 'Power1',
+        x: '+=5',
+        y: '+=5', // Move 5 pixels para a direita
+        yoyo: true,
+        repeat: 5
+      });
+
+      this.tweens.add({
+        targets: roboArmCirc,
+        duration: 300, // duração em milissegundos
+        ease: 'Power1', // função de interpolação para suavizar o movimento
+        alpha: 0.5, // valor final de alfa (transparência)
+        tint: 0xff0000, // cor final (vermelho no formato hexadecimal)
+        yoyo: true, // faz a animação de ida e volta
+        repeat: 1, // número de vezes para repetir a animação
+        onComplete: () => {
+          roboArmCirc.alpha = 1; // Restaura o alfa para 1 após a animação
+          roboArmCirc.tint = 0xffffff; // Restaura a cor para branca após a animação
+        }
+      });
+
+    }
+
     //Braço da IA
     this.add.image(650, 100, "roboticArm").setFlipX(true).setFlipY(true).setScale(0.8);
     this.add.image(650, 100, "roboticArmCircuit").setFlipX(true).setFlipY(true).setScale(0.8);
 
-    this.add.image(650,640, "archer");
-
-    this.humanHealthText = this.add.text(30,530,`Sua vida: ${this.humanHealth}`,
+    this.humanHealthText = this.add.text(30, 530, `Sua vida: ${this.humanHealth}`,
       {
         fontSize: "20px",
         color: "#fff",
@@ -88,29 +116,20 @@ export default class AncientDices extends Phaser.Scene {
     });
 
     for (let i = 0; i < 6; i++) {
-      const slot = this.add.image(100 + i * 50, 500, "slot");
-      this.humanRobotArmSlots.push(slot);
-    }
-
-    for (let i = 0; i < 6; i++) {
-      const slot = this.add.image(700 + i * -50, 100, "slot");
-      this.aiRobotArmSlots.push(slot);
-    }
-
-    for (let i = 0; i < 6; i++) {
-      const slot = this.add.image(200 + i * 50, 370, "slot");
+      const slot = this.add.rectangle(400 + i * 50, 370, 100, 100, 0x000000, 0);
       this.humanBattlefieldSlots.push(slot);
     }
 
     for (let i = 0; i < 6; i++) {
-      const slot = this.add.image(200 + i * 50, 240, "slot");
+      const slot = this.add.rectangle(400 + i * 50, 240, 100, 100, 0x000000, 0);
       this.aiBattlefieldSlots.push(slot);
     }
 
     this.allHumanDicesArrayVerification = new Array(6).fill(false);
 
-    this.rollDicesButton = this.add.image(500, 500, "roll").setInteractive();
+    this.rollDicesButton = this.add.image(1000, 500, "roll").setInteractive();
     this.rollDicesButton.on("pointerdown", () => {
+      playDamageAnimation.call(this);
       if (!this.isPlayerTurn || (this.isPlayerTurn && this.hasRolledDice)) {
         return;
       }
@@ -126,35 +145,28 @@ export default class AncientDices extends Phaser.Scene {
 
           if (isSelected === false) {
             const randomDiceSide = Phaser.Math.RND.pick(diceArray);
-            const slot = this.humanRobotArmSlots[slotIndex];
 
-            if (slot) {
-              const diceSprite = this.spawnDiceOnSlot(
-                slot.x,
-                slot.y,
-                randomDiceSide,
-                diceName
-              );
-              this.allHumanDicesArray.push(diceSprite);
-            }
+            const x = 420 + slotIndex * 72;
+            const y = 630;
+
+            const diceSprite = this.spawnDiceOnSlot(x, y, randomDiceSide, diceName);
+            diceSprite.setScale(0.4)
+            this.allHumanDicesArray.push(diceSprite);
           }
         }
 
         // Lógica para o turno 1
         if (this.turnCounter === 1) {
           const randomDiceSide = Phaser.Math.RND.pick(diceArray);
-          const slot = this.humanRobotArmSlots[slotIndex];
 
-          if (slot) {
-            const diceSprite = this.spawnDiceOnSlot(
-              slot.x,
-              slot.y,
-              randomDiceSide,
-              diceName
-            );
-            this.allHumanDicesArray.push(diceSprite);
-            this.allHumanDicesArrayVerification.push(diceSprite);
-          }
+          const spawnX = 420 + slotIndex * 72;
+          const spawnY = 630;
+
+          const diceSprite = this.spawnDiceOnSlot(spawnX, spawnY, randomDiceSide, diceName);
+          diceSprite.setScale(0.4)
+          this.allHumanDicesArray.push(diceSprite);
+          this.allHumanDicesArrayVerification.push(diceSprite);
+
         }
         slotIndex++;
       }
@@ -165,9 +177,7 @@ export default class AncientDices extends Phaser.Scene {
 
     this.menuGroup = this.add.group().setVisible(false);
 
-    this.finishTurnButton = this.add
-      .rectangle(700, 300, 100, 50, 0x3498db)
-      .setInteractive();
+    this.finishTurnButton = this.add.rectangle(1200, 350, 100, 50, 0x3498db).setInteractive();
 
     this.finishTurnButton.on("pointerdown", () => {
       this.disableFinishButton();
@@ -184,11 +194,11 @@ export default class AncientDices extends Phaser.Scene {
         return;
       } else {
         setTimeout(() => {
-          this.aiRollDiceExample();
+          this.aiManager.aiRollDiceExample();
         }, 1000);
 
         setTimeout(() => {
-          this.moveAiDicesToBattlefield();
+          this.aiManager.moveAiDicesToBattlefield(this.aiBattlefieldSlots, this.aiBattlefieldDice);
         }, 2000);
 
         setTimeout(() => {
@@ -253,76 +263,6 @@ export default class AncientDices extends Phaser.Scene {
       console.log("todos os dados", this.allHumanDicesArray);
     });
     return diceSprite;
-  }
-
-  aiRollDice() {
-    let slotIndex = 0;
-    for (const diceName in diceArrays) {
-      const diceArray = diceArrays[diceName];
-      const randomDiceSide = Phaser.Math.RND.pick(diceArray);
-      const slot = this.aiRobotArmSlots[slotIndex];
-      if (slot) {
-        this.spawnDiceOnSlot(slot.x, slot.y, randomDiceSide, diceName);
-      }
-      slotIndex++;
-    }
-  }
-
-  aiRollDiceExample() {
-    let slotIndex = 0;
-    for (const diceName in diceArrays) {
-      const diceArray = diceArrays[diceName];
-      const meleeDice = diceArray.find((dice) => dice.name.includes("Melee"));
-      const slot = this.aiRobotArmSlots[slotIndex];
-      if (slot) {
-        const resultDice = this.aiSpawnDiceOnSlot(
-          slot.x,
-          slot.y,
-          meleeDice,
-          diceName
-        );
-        this.allAIDicesArray.push(resultDice);
-      }
-      slotIndex++;
-      console.log("dados do iniimgo:", this.allAIDicesArray);
-    }
-  }
-
-  aiSpawnDiceOnSlot(
-    x: number,
-    y: number,
-    diceSide: DiceArrayItem,
-    diceName: string
-  ): Phaser.GameObjects.Sprite {
-    const diceKey = `${diceName}_${diceSide.name}`;
-    const diceSprite = this.add.sprite(x, y, diceKey);
-    return diceSprite;
-  }
-
-  moveAiDicesToBattlefield() {
-    for (let i = 0; i < this.aiRobotArmSlots.length; i++) {
-      const slot = this.aiBattlefieldSlots[i];
-      const diceSprite = this.allAIDicesArray[i];
-
-      if (slot && diceSprite) {
-        this.putAiDiceOnBattlefield(diceSprite, slot.x, slot.y);
-
-        const indexToRemove = this.aiRobotArmSlots.indexOf(diceSprite);
-        if (indexToRemove !== -1) {
-          this.allAIDicesArray.splice(indexToRemove, 1);
-        }
-      }
-    }
-  }
-
-  putAiDiceOnBattlefield(
-    diceSprite: Phaser.GameObjects.Sprite,
-    slotX: number,
-    slotY: number
-  ) {
-    diceSprite.x = slotX;
-    diceSprite.y = slotY;
-    this.aiBattlefieldDice.push({ sprite: diceSprite });
   }
 
   private createText(
