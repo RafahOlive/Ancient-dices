@@ -1,8 +1,10 @@
 import Phaser from "phaser";
 import { diceArrays, DiceArrayItem, loadDiceImages } from "./diceData";
-import { AIManager } from "./AI";
+import { AIManager } from "./aiManager";
+import {BattleManager} from "./battleManager";
 
 export default class AncientDices extends Phaser.Scene {
+  private battleManager: BattleManager;
   private aiManager: AIManager;
 
   private menuGroup!: Phaser.GameObjects.Group;
@@ -29,15 +31,15 @@ export default class AncientDices extends Phaser.Scene {
 
   private allHumanDicesArrayVerification: boolean[] = [];
 
-  private humanHealth: number = 20;
-  private aiHealth: number = 20;
-  private humanHealthText: Phaser.GameObjects.Text;
-  private aiHealthText: Phaser.GameObjects.Text;
-
   private humanBless: number = 0;
   private aiBless: number = 0;
 
-  // private gradient: Phaser.GameObjects.Graphics;
+  constructor() {
+    super({ key: 'AncientDices'});
+    this.battleManager = new BattleManager();
+    // this.aiManager = new AIManager(Phaser.Scene, this.aiRobotArmSlots, this.allAIDicesArray);
+    // Outras inicializações, se necessário...
+  }
 
   preload() {
     this.load.image("BGBase", "src/assets/Background/Base.png");
@@ -98,14 +100,14 @@ export default class AncientDices extends Phaser.Scene {
     this.add.image(650, 100, "roboticArm").setFlipX(true).setFlipY(true).setScale(0.8);
     this.add.image(650, 100, "roboticArmCircuit").setFlipX(true).setFlipY(true).setScale(0.8);
 
-    this.humanHealthText = this.add.text(30, 530, `Sua vida: ${this.humanHealth}`,
+    this.battleManager.humanHealthText = this.add.text(30, 530, `Sua vida: ${this.battleManager.humanHealth}`,
       {
         fontSize: "20px",
         color: "#fff",
       }
     );
 
-    this.aiHealthText = this.add.text(630, 50, `Inimigo: ${this.aiHealth}`, {
+    this.battleManager.aiHealthText = this.add.text(630, 50, `Inimigo: ${this.battleManager.aiHealth}`, {
       fontSize: "20px",
       color: "#fff",
     });
@@ -183,7 +185,10 @@ export default class AncientDices extends Phaser.Scene {
       this.disableFinishButton();
       this.clearRemainingDices();
       if (this.turnCounter === 3) {
-        this.resolveDuel();
+        this.battleManager.resolveDuel(this.humanBattlefieldDice, this.aiBattlefieldDice);
+        console.log("Antes de updateHealthText - Human Health:", this.battleManager.humanHealth, "AI Health:", this.battleManager.aiHealth);
+        console.log("Depois de updateHealthText - Human Health:", this.battleManager.humanHealth, "AI Health:", this.battleManager.aiHealth);
+
       } else if (
         this.aiBattlefieldDice.length >= this.aiBattlefieldSlots.length
       ) {
@@ -206,11 +211,6 @@ export default class AncientDices extends Phaser.Scene {
         }, 3000);
       }
     });
-  }
-
-  private updateHealthText() {
-    this.humanHealthText.setText(`Human Health: ${this.humanHealth}`);
-    this.aiHealthText.setText(`AI Health: ${this.aiHealth}`);
   }
 
   clearRemainingDices() {
@@ -377,136 +377,6 @@ export default class AncientDices extends Phaser.Scene {
         }
       }
     }
-
     return totalDamageBySide;
-  }
-
-  private resolveDuel() {
-    const humanMeleeDamage = this.humanTotalDamage("Melee");
-    const humanRangedDamage = this.humanTotalDamage("Ranged");
-    // const humanThiefDamage = this.calculateTotalDamage("Thief");
-
-    const humanMeleeDef = this.humanTotalDefense("DefMelee");
-    const humanRangedDef = this.humanTotalDefense("DefRanged");
-
-    const aiMeleeDamage = this.aiTotalDamage("Melee");
-    const aiRangedDamage = this.aiTotalDamage("Ranged");
-
-    const aiMeleeDef = this.aiTotalDefense("DefMelee");
-    const aiRangedDef = this.aiTotalDefense("DefRanged");
-
-    const humanMeleeDifference = humanMeleeDamage - aiMeleeDef;
-    const humanRangedDifference = humanRangedDamage - aiRangedDef;
-    const aiMeleeDifference = aiMeleeDamage - humanMeleeDef;
-    const aiRangedDifference = aiRangedDamage - humanRangedDef;
-
-    this.applyDamageToIA(humanMeleeDifference, humanRangedDifference);
-    this.applyDamageToHuman(aiMeleeDifference, aiRangedDifference);
-
-    console.log(
-      "Differences - Human Melee:",
-      humanMeleeDifference,
-      "Ranged:",
-      humanRangedDifference
-    );
-    console.log(
-      "Differences - AI Melee:",
-      aiMeleeDifference,
-      "Ranged:",
-      aiRangedDifference
-    );
-
-    console.log("EUREKAAAAAA");
-    this.updateHealthText();
-  }
-
-  private humanTotalDamage(type: string): number {
-    let totalDamage = 0;
-
-    for (const diceInfo of this.humanBattlefieldDice) {
-      const diceSprite = diceInfo.sprite;
-      const diceName = diceSprite.texture.key;
-
-      if (diceName.includes(type) && !diceName.includes("Def")) {
-        totalDamage += 1;
-      }
-    }
-    return totalDamage;
-  }
-
-  private humanTotalDefense(type: string): number {
-    let totalDefense = 0;
-
-    for (const diceInfo of this.humanBattlefieldDice) {
-      const diceSprite = diceInfo.sprite;
-      const diceName = diceSprite.texture.key;
-
-      if (diceName.includes(type)) {
-        totalDefense += 1;
-      }
-    }
-    return totalDefense;
-  }
-
-  private aiTotalDamage(type: string): number {
-    let totalDamage = 0;
-
-    for (const diceInfo of this.aiBattlefieldDice) {
-      const diceSprite = diceInfo.sprite;
-      const diceName = diceSprite.texture.key;
-
-      if (diceName.includes(type)) {
-        totalDamage += 1;
-      }
-    }
-    return totalDamage;
-  }
-
-  private aiTotalDefense(type: string): number {
-    let aiTotalDefense = 0;
-
-    for (const diceInfo of this.aiBattlefieldDice) {
-      const diceSprite = diceInfo.sprite;
-      const diceName = diceSprite.texture.key;
-
-      if (diceName.includes(type)) {
-        aiTotalDefense += 1;
-      }
-    }
-    return aiTotalDefense;
-  }
-
-  private applyDamageToIA(meleeDamage: number, rangedDamage: number) {
-    const meleeDamageToIA = Math.max(0, meleeDamage);
-    const rangedDamageToIA = Math.max(0, rangedDamage);
-
-    const totalDamageToIA = meleeDamageToIA + rangedDamageToIA;
-    this.reduceIAHealth(totalDamageToIA);
-  }
-
-  private applyDamageToHuman(meleeDamage: number, rangedDamage: number) {
-    const meleeDamageToHuman = Math.max(0, meleeDamage);
-    const rangedDamageToHuman = Math.max(0, rangedDamage);
-
-    const totalDamageToHuman = meleeDamageToHuman + rangedDamageToHuman;
-    this.reduceHumanHealth(totalDamageToHuman);
-  }
-
-  private reduceIAHealth(damage: number) {
-    this.aiHealth -= damage;
-    console.log(
-      `IA perdeu ${damage} pontos de vida. Vida atual: ${this.aiHealth}`
-    );
-
-    // Lógica adicional conforme necessário, como verificar se a IA foi derrotada
-  }
-
-  private reduceHumanHealth(damage: number) {
-    this.humanHealth -= damage;
-    console.log(
-      `Humano perdeu ${damage} pontos de vida. Vida atual: ${this.humanHealth}`
-    );
-
-    // Lógica adicional conforme necessário, como verificar se o humano foi derrotado
   }
 }
