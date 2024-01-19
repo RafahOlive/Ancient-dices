@@ -45,9 +45,17 @@ export default class AncientDices extends Phaser.Scene {
     this.load.image("BGBase", "src/assets/Background/Base.png");
     this.load.image("BGCircuit", "src/assets/Background/Circuits.png");
 
+    // for (const diceName in diceArrays) {
+    //   loadDiceImages(this, diceName, diceArrays[diceName]);
+    // }
+
     for (const diceName in diceArrays) {
-      loadDiceImages(this, diceName, diceArrays[diceName]);
+      const diceArray = diceArrays[diceName];
+      diceArray.forEach((item) => {
+        loadDiceImages(this, item.name, item.imagePath);
+      });
     }
+    
 
     // RobotArm Interactives
     this.load.image("roll", "src/assets/RoboticArm/Roll.png");
@@ -56,6 +64,20 @@ export default class AncientDices extends Phaser.Scene {
   }
 
   create() {
+    const textureManager = this.textures;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // // Verificar se uma textura específica existe
+    // const textureExists = textureManager.exists('');
+    // console.log(`A textura existe? ${textureExists}`);
+
+    // Obter os nomes das texturas carregadas
+    const textureNames: string[] = Object.keys(textureManager.list);
+
+    console.log('Nomes de texturas carregadas:', textureNames);
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
     // this.scale.scaleMode = Phaser.Scale.ScaleModes.FIT;
     this.scale.setGameSize(1920, 1090);
 
@@ -151,7 +173,7 @@ export default class AncientDices extends Phaser.Scene {
             const x = 420 + slotIndex * 72;
             const y = 630;
 
-            const diceSprite = this.spawnDiceOnSlot(x, y, randomDiceSide, diceName);
+            const diceSprite = this.spawnDiceOnSlot(x, y, randomDiceSide);
             diceSprite.setScale(0.4)
             this.allHumanDicesArray.push(diceSprite);
           }
@@ -164,11 +186,11 @@ export default class AncientDices extends Phaser.Scene {
           const spawnX = 420 + slotIndex * 72;
           const spawnY = 630;
 
-          const diceSprite = this.spawnDiceOnSlot(spawnX, spawnY, randomDiceSide, diceName);
+          const diceSprite = this.spawnDiceOnSlot(spawnX, spawnY, randomDiceSide);
           diceSprite.setScale(0.4)
+
           this.allHumanDicesArray.push(diceSprite);
           this.allHumanDicesArrayVerification.push(diceSprite);
-
         }
         slotIndex++;
       }
@@ -185,6 +207,11 @@ export default class AncientDices extends Phaser.Scene {
       this.disableFinishButton();
       this.clearRemainingDices();
       if (this.turnCounter === 3) {
+        this.humanBattlefieldDice = this.battleManager.organizeBattlefieldDices(this.humanBattlefieldDice)
+        // console.log('Funcionei, dados organizados:', this.humanBattlefieldDice);
+        // setTimeout(() => {
+        //   this.battleManager.resolveDuel(this.humanBattlefieldDice, this.aiBattlefieldDice);
+        // }, 10000);
         this.battleManager.resolveDuel(this.humanBattlefieldDice, this.aiBattlefieldDice);
         console.log("Antes de updateHealthText - Human Health:", this.battleManager.humanHealth, "AI Health:", this.battleManager.aiHealth);
         console.log("Depois de updateHealthText - Human Health:", this.battleManager.humanHealth, "AI Health:", this.battleManager.aiHealth);
@@ -245,20 +272,15 @@ export default class AncientDices extends Phaser.Scene {
     this.turnText.setText(`Turno: ${this.turnCounter}`);
   }
 
-  private spawnDiceOnSlot(
-    x: number,
-    y: number,
-    diceSide: DiceArrayItem,
-    diceName: string
-  ) {
-    const diceKey = `${diceName}_${diceSide.name}`;
+  private spawnDiceOnSlot(x: number,y: number,diceSide: DiceArrayItem) {
+    const diceKey = `${diceSide.name.replace(/\.png/g, '')}`;
     const diceSprite = this.add.sprite(x, y, diceKey).setInteractive();
     const menuGroup = this.menuGroup;
     diceSprite.on("pointerdown", () => {
       menuGroup.setVisible(true);
-      this.createText("Selecionar", 100, 420, diceSprite, diceName);
-      this.createText("Detalhes", 100, 440, diceSprite, diceName);
-      this.createText("Cancelar", 100, 460, diceSprite, diceName);
+      this.createText("Selecionar", 100, 420, diceSprite);
+      this.createText("Detalhes", 100, 440, diceSprite);
+      this.createText("Cancelar", 100, 460, diceSprite);
 
       console.log("todos os dados", this.allHumanDicesArray);
     });
@@ -270,10 +292,9 @@ export default class AncientDices extends Phaser.Scene {
     x: number,
     y: number,
     diceSprite: Phaser.GameObjects.Sprite,
-    diceName: string
+    // diceName: string
   ) {
-    const menuText = this.add
-      .text(x, y, text, {
+    const menuText = this.add.text(x, y, text, {
         color: "#000000",
         backgroundColor: "#ffffff",
         padding: {
@@ -284,18 +305,13 @@ export default class AncientDices extends Phaser.Scene {
         },
         fontSize: 12,
         lineSpacing: 10,
-      })
-      .setOrigin(0.5, 0.5)
-      .setInteractive()
-      .on("pointerdown", () => {
+      }).setOrigin(0.5, 0.5).setInteractive().on("pointerdown", () => {
         const localMenuGroup = this.menuGroup;
 
         if (text === "Cancelar" && localMenuGroup) {
           localMenuGroup.setVisible(false);
         } else if (text === "Selecionar" && localMenuGroup) {
-          if (
-            this.humanBattlefieldDice.length < this.humanBattlefieldSlots.length
-          ) {
+          if (this.humanBattlefieldDice.length < this.humanBattlefieldSlots.length) {
             const nextSlotIndex = this.humanBattlefieldDice.length;
             const nextSlot = this.humanBattlefieldSlots[nextSlotIndex];
 
@@ -307,14 +323,8 @@ export default class AncientDices extends Phaser.Scene {
               this.allHumanDicesArray.splice(indexToRemove, 1);
             }
             localMenuGroup.setVisible(false);
-            console.log(
-              "todos os dados após selecionar um dado",
-              this.allHumanDicesArrayVerification
-            );
-            console.log(
-              "todos os dados após selecionar um dado (array de criação)",
-              this.allHumanDicesArray
-            );
+            console.log("todos os dados após selecionar um dado",this.allHumanDicesArrayVerification);
+            console.log("todos os dados após selecionar um dado (array de criação)",this.allHumanDicesArray);
           }
         }
       });
@@ -322,23 +332,18 @@ export default class AncientDices extends Phaser.Scene {
     this.menuGroup.add(menuText);
   }
 
-  putHumanDiceOnBattlefield(
-    diceSprite: Phaser.GameObjects.Sprite,
-    slotX: number,
-    slotY: number
-  ) {
+  putHumanDiceOnBattlefield(diceSprite: Phaser.GameObjects.Sprite,slotX: number,slotY: number) {
     diceSprite.disableInteractive();
     diceSprite.x = slotX;
     diceSprite.y = slotY;
 
     const diceName = diceSprite.texture.key;
 
+    console.log("O Que temos aqui de name?:",diceName);
+
     this.humanBattlefieldDice.push({ sprite: diceSprite, name: diceName });
 
-    console.log(
-      "info dos dados que eu preciso para o DUELO:",
-      this.humanBattlefieldDice
-    );
+    console.log("info dos dados que eu preciso para o DUELO:",this.humanBattlefieldDice);
   }
 
   private generateHumanDamageValue(): { [diceName: string]: number } {

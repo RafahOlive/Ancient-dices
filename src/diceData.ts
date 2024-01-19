@@ -58,18 +58,35 @@ export const diceArrays: DiceArrays = {
   ],
 };
 
+// slot 1 : 2 melee, blessedRanged, defMelee, defRanged, blessedThief
+// slot 2 : 2 melee, ranged, defMelee, blessedDefRanged, blessedThief
+// slot 3 : 2 melee, blessedRanged, blessedDefMelee, defRanged, thief
+// slot 4 : 2 melee, ranged, blessedDefMelee, defRanged, blessedThief
+// slot 5 : 2 melee, blessedRanged, defMelee, BlessedDefRanged, thief
+// slot 6 : 2 melee, ranged, blessedDefMelee, blessedDefRanged, thief
 
-// dice 2 : 2 melee, ranged, defMelee, blessedDefRanged, blessedThief
-// dice 3 : 2 melee, blessedRanged, blessedDefMelee, defRanged, thief
-// dice 4 : 2 melee, ranged, blessedDefMelee, defRanged, blessedThief
-// dice 5 : 2 melee, blessedRanged, defMelee, BlessedDefRanged, thief
-// dice 6 : 2 melee, ranged, blessedDefMelee, blessedDefRanged, thief
+// export function loadDiceImages(scene: Phaser.Scene, diceName: string, diceArray: DiceArrayItem[]) {
+//   diceArray.forEach((item) => {
+//     scene.load.image(
+//       `${diceName}_${item.name}`,
+//       `src/assets/SideDices/${item.imagePath}`
+//     );
+//   });
+// }
 
-export function loadDiceImages(scene: Phaser.Scene, diceName: string, diceArray: DiceArrayItem[]) {
-  diceArray.forEach((item) => {
-    scene.load.image(
-      `${diceName}_${item.name}`,
-      `src/assets/SideDices/${item.imagePath}`
-    );
-  });
+export function loadDiceImages(scene: Phaser.Scene, textureName: string, imagePath: string) {
+  const textureKey = textureName.split('.')[0];
+  scene.load.image(textureKey, `src/assets/SideDices/${imagePath}`);
 }
+
+
+
+
+
+
+
+
+
+
+
+

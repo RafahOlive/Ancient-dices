@@ -5,10 +5,42 @@ export class BattleManager {
     public humanHealthText: Phaser.GameObjects.Text;
     public aiHealthText: Phaser.GameObjects.Text;
 
-    public resolveDuel(
-        humanBattlefieldDice: Phaser.GameObjects.Sprite[] = [],
-        aiBattlefieldDice: Phaser.GameObjects.Sprite[] = [],
-    ) {
+    public organizeBattlefieldDices(humanBattlefieldDice: Phaser.GameObjects.Sprite[] = []): Phaser.GameObjects.Sprite[] {
+        console.log('COMO ESSA MERDA TA VINDO PRA MIM?:', humanBattlefieldDice);
+        const categories = ["Melee", "Ranged", "BlessedRanged", "DefMelee", "BlessedDefMelee", "DefRanged", "BlessedDefRanged", "Thief", "BlessedThief"];
+
+        const tempHumanDiceArrays: Record<string, Phaser.GameObjects.Sprite[]> = {};
+        categories.forEach(category => tempHumanDiceArrays[category] = []);
+        console.log('Conteúdo original de tempHumanDiceArrays:', tempHumanDiceArrays);
+
+
+        for (const diceInfo of humanBattlefieldDice) {
+            const diceSprite = diceInfo;
+            console.log('Valor de diceSprite:', diceSprite);
+            console.log('Valor de diceSprite.texture:', diceSprite.texture);
+            console.log('Valor de diceSprite.texture.key:', diceSprite.texture.key);
+
+            if (diceSprite && diceSprite.texture && diceSprite.texture.key) {
+                categories.forEach(category => {
+                    if (diceSprite.texture.key === category) {
+                        tempHumanDiceArrays[category].push(diceSprite);
+                        console.log('Após o preenchimento de tempHumanDiceArrays:', tempHumanDiceArrays);
+                    }
+                });
+            }
+        }
+        const newHumanBattlefieldDice: Phaser.GameObjects.Sprite[] = [];
+        categories.forEach(category => {
+            newHumanBattlefieldDice.push(...tempHumanDiceArrays[category].slice());
+            console.log('Após criar newHumanBattlefieldDice:', newHumanBattlefieldDice);
+        });
+
+        console.log('Funcionei, dados organizados:', newHumanBattlefieldDice);
+
+        return newHumanBattlefieldDice;
+    }
+
+    public resolveDuel(humanBattlefieldDice: Phaser.GameObjects.Sprite[] = [], aiBattlefieldDice: Phaser.GameObjects.Sprite[] = []) {
         const humanMeleeDamage = BattleManager.humanTotalDamage(humanBattlefieldDice, "Melee");
         const humanRangedDamage = BattleManager.humanTotalDamage(humanBattlefieldDice, "Ranged");
 
