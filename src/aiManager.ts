@@ -34,7 +34,7 @@ export class AIManager {
       const spawnX = 520 + slotIndex * 72;
       const spawnY = 100;
 
-      const resultDice = this.aiSpawnDiceOnSlot(spawnX, spawnY, meleeDice, diceName);
+      const resultDice = this.aiSpawnDiceOnSlot(spawnX, spawnY, meleeDice);
       resultDice.setScale(0.4)
       this.allAIDicesArray.push(resultDice);
 
@@ -43,8 +43,8 @@ export class AIManager {
     }
   }
 
-  aiSpawnDiceOnSlot(x: number, y: number, diceSide: DiceArrayItem, diceName: string): Phaser.GameObjects.Sprite {
-    const diceKey = `${diceName}_${diceSide.name}`;
+  aiSpawnDiceOnSlot(x: number, y: number, diceSide: DiceArrayItem): Phaser.GameObjects.Sprite {
+    const diceKey = `${diceSide.name.replace(/\.png/g, '')}`;
     const diceSprite = this.scene.add.sprite(x, y, diceKey);
     return diceSprite;
   }
@@ -68,7 +68,9 @@ export class AIManager {
   putAiDiceOnBattlefield(diceSprite: Phaser.GameObjects.Sprite, slotX: number, slotY: number, aiBattlefieldDice: { sprite: Phaser.GameObjects.Sprite }[]) {
     diceSprite.x = slotX;
     diceSprite.y = slotY;
-    aiBattlefieldDice.push({ sprite: diceSprite });
+
+    const diceName = diceSprite.texture.key;
+    aiBattlefieldDice.push({ sprite: diceSprite, name: diceName });
   }
 
   private spawnDiceOnSlot(x: number, y: number, diceSide: DiceArrayItem, diceName: string) {

@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import { diceArrays, DiceArrayItem, loadDiceImages } from "./diceData";
 import { AIManager } from "./aiManager";
-import {BattleManager} from "./battleManager";
+import BattleManager from "./battleManager";
 
 export default class AncientDices extends Phaser.Scene {
   private battleManager: BattleManager;
@@ -36,7 +36,7 @@ export default class AncientDices extends Phaser.Scene {
 
   constructor() {
     super({ key: 'AncientDices'});
-    this.battleManager = new BattleManager();
+    this.battleManager = new BattleManager(this);
     // this.aiManager = new AIManager(Phaser.Scene, this.aiRobotArmSlots, this.allAIDicesArray);
     // Outras inicializações, se necessário...
   }
@@ -67,10 +67,6 @@ export default class AncientDices extends Phaser.Scene {
     const textureManager = this.textures;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    // // Verificar se uma textura específica existe
-    // const textureExists = textureManager.exists('');
-    // console.log(`A textura existe? ${textureExists}`);
 
     // Obter os nomes das texturas carregadas
     const textureNames: string[] = Object.keys(textureManager.list);
@@ -207,7 +203,7 @@ export default class AncientDices extends Phaser.Scene {
       this.disableFinishButton();
       this.clearRemainingDices();
       if (this.turnCounter === 3) {
-        this.humanBattlefieldDice = this.battleManager.organizeBattlefieldDices(this.humanBattlefieldDice)
+        this.battleManager.organizeBattlefieldDices(this.humanBattlefieldDice, this.aiBattlefieldDice)
         // console.log('Funcionei, dados organizados:', this.humanBattlefieldDice);
         // setTimeout(() => {
         //   this.battleManager.resolveDuel(this.humanBattlefieldDice, this.aiBattlefieldDice);
@@ -292,7 +288,6 @@ export default class AncientDices extends Phaser.Scene {
     x: number,
     y: number,
     diceSprite: Phaser.GameObjects.Sprite,
-    // diceName: string
   ) {
     const menuText = this.add.text(x, y, text, {
         color: "#000000",

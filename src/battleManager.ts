@@ -1,43 +1,63 @@
-export class BattleManager {
+import Phaser from "phaser";
+
+export default class BattleManager {
+    private scene: Phaser.Scene
     public humanHealth: number = 20;
     public aiHealth: number = 20;
 
     public humanHealthText: Phaser.GameObjects.Text;
     public aiHealthText: Phaser.GameObjects.Text;
 
-    public organizeBattlefieldDices(humanBattlefieldDice: Phaser.GameObjects.Sprite[] = []): Phaser.GameObjects.Sprite[] {
-        console.log('COMO ESSA MERDA TA VINDO PRA MIM?:', humanBattlefieldDice);
-        const categories = ["Melee", "Ranged", "BlessedRanged", "DefMelee", "BlessedDefMelee", "DefRanged", "BlessedDefRanged", "Thief", "BlessedThief"];
+    constructor(scene: Phaser.Scene) {
+        this.scene = scene
+    }
 
-        const tempHumanDiceArrays: Record<string, Phaser.GameObjects.Sprite[]> = {};
-        categories.forEach(category => tempHumanDiceArrays[category] = []);
-        console.log('Conteúdo original de tempHumanDiceArrays:', tempHumanDiceArrays);
+    public organizeBattlefieldDices(humanBattlefieldDice: Phaser.GameObjects.Sprite[] = [], aiBattlefieldDice: Phaser.GameObjects.Sprite[] = []) {
+
+        const order: string[] = ["Melee", "Ranged", "BlessedRanged", "DefMelee", "BlessedDefMelee", "DefRanged", "BlessedDefRanged", "Thief", "BlessedThief"];
+        const orderedHumanBattlefieldDice: Phaser.GameObjects.Sprite[] = [];
+        const orderedAIBattlefieldDice: Phaser.GameObjects.Sprite[] = [];
+        console.log('AI como vc vem pra mim?', aiBattlefieldDice)
+        console.log('HUMAN como vc vem pra mim?', humanBattlefieldDice)
 
 
-        for (const diceInfo of humanBattlefieldDice) {
-            const diceSprite = diceInfo;
-            console.log('Valor de diceSprite:', diceSprite);
-            console.log('Valor de diceSprite.texture:', diceSprite.texture);
-            console.log('Valor de diceSprite.texture.key:', diceSprite.texture.key);
+        for (const category of order) {
+            const humanCategorySprites = humanBattlefieldDice.filter(dice => dice.name === category);
+            orderedHumanBattlefieldDice.push(...humanCategorySprites);
 
-            if (diceSprite && diceSprite.texture && diceSprite.texture.key) {
-                categories.forEach(category => {
-                    if (diceSprite.texture.key === category) {
-                        tempHumanDiceArrays[category].push(diceSprite);
-                        console.log('Após o preenchimento de tempHumanDiceArrays:', tempHumanDiceArrays);
-                    }
-                });
-            }
+            const aiCategorySprites = aiBattlefieldDice.filter(dice => dice.name === category);
+            orderedAIBattlefieldDice.push(...aiCategorySprites)
         }
-        const newHumanBattlefieldDice: Phaser.GameObjects.Sprite[] = [];
-        categories.forEach(category => {
-            newHumanBattlefieldDice.push(...tempHumanDiceArrays[category].slice());
-            console.log('Após criar newHumanBattlefieldDice:', newHumanBattlefieldDice);
-        });
 
-        console.log('Funcionei, dados organizados:', newHumanBattlefieldDice);
+        console.log('Dados humanos organizados:', orderedHumanBattlefieldDice)
+        console.log('Dados AI organizados:', orderedAIBattlefieldDice)
 
-        return newHumanBattlefieldDice;
+        const hasHumanMelee = orderedHumanBattlefieldDice.some(dice => dice.name === "Melee");
+        if (hasHumanMelee) {
+            const meleeDices = orderedHumanBattlefieldDice.filter(dice => dice.name === "Melee");
+
+            console.log('Melee dices com problema:', meleeDices)
+
+            const espacoEntreDado = 50;
+            let startX = 400;  
+            const startY = 400
+
+            meleeDices.forEach((meleeDice) => {
+                const endX = startX
+                const endY = startY
+                this.scene.tweens.add({
+                    targets: meleeDice.sprite,
+                    x: endX,
+                    y: endY,
+                    duration: 1000,
+                    ease: 'Linear',
+                    onComplete: () => {
+                        console.log('Animei')
+                    }
+                })
+                startX += espacoEntreDado;
+            })
+        }
     }
 
     public resolveDuel(humanBattlefieldDice: Phaser.GameObjects.Sprite[] = [], aiBattlefieldDice: Phaser.GameObjects.Sprite[] = []) {
