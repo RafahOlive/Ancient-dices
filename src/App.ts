@@ -136,12 +136,12 @@ export default class AncientDices extends Phaser.Scene {
     });
 
     for (let i = 0; i < 6; i++) {
-      const slot = this.add.rectangle(400 + i * 50, 370, 100, 100, 0x000000, 0);
+      const slot = this.add.rectangle(500 + i * 50, 490, 100, 50, 0x000000, 1);
       this.humanBattlefieldSlots.push(slot);
     }
 
     for (let i = 0; i < 6; i++) {
-      const slot = this.add.rectangle(400 + i * 50, 240, 100, 100, 0x000000, 0);
+      const slot = this.add.rectangle(500 + i * 50, 240, 100, 50, 0x000000, 1);
       this.aiBattlefieldSlots.push(slot);
     }
 
@@ -204,10 +204,6 @@ export default class AncientDices extends Phaser.Scene {
       this.clearRemainingDices();
       if (this.turnCounter === 3) {
         this.battleManager.organizeBattlefieldDices(this.humanBattlefieldDice, this.aiBattlefieldDice)
-        // console.log('Funcionei, dados organizados:', this.humanBattlefieldDice);
-        // setTimeout(() => {
-        //   this.battleManager.resolveDuel(this.humanBattlefieldDice, this.aiBattlefieldDice);
-        // }, 10000);
         this.battleManager.resolveDuel(this.humanBattlefieldDice, this.aiBattlefieldDice);
         console.log("Antes de updateHealthText - Human Health:", this.battleManager.humanHealth, "AI Health:", this.battleManager.aiHealth);
         console.log("Depois de updateHealthText - Human Health:", this.battleManager.humanHealth, "AI Health:", this.battleManager.aiHealth);
@@ -239,10 +235,6 @@ export default class AncientDices extends Phaser.Scene {
   clearRemainingDices() {
     this.allHumanDicesArray.forEach((sprite) => sprite.destroy());
     this.allHumanDicesArray = [];
-    console.log(
-      "todos os dados após finalizar o turno inimigo",
-      this.allHumanDicesArray
-    );
   }
 
   disableFinishButton() {

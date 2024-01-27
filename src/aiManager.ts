@@ -29,7 +29,7 @@ export class AIManager {
     let slotIndex = 0;
     for (const diceName in diceArrays) {
       const diceArray = diceArrays[diceName];
-      const meleeDice = diceArray.find((dice) => dice.name.includes("Melee"));
+      const meleeDice = diceArray.find((dice) => dice.name.includes("DefMelee"));
 
       const spawnX = 520 + slotIndex * 72;
       const spawnY = 100;
