@@ -20,6 +20,9 @@ export default class BattleManager {
         const finalOrderedHumanBattlefieldDice: Phaser.GameObjects.Sprite[] = [];
         const finalOrderedAIBattlefieldDice: Phaser.GameObjects.Sprite[] = [];
 
+        let humanMeleeSidesBattlefield: Phaser.GameObjects.Sprite[] = [];
+        let aiMeleeDefSidesBattlefield: Phaser.GameObjects.Sprite[] = [];
+
         console.log('AI como vc vem pra mim?', aiBattlefieldDice)
         console.log('HUMAN como vc vem pra mim?', humanBattlefieldDice)
 
@@ -55,89 +58,30 @@ export default class BattleManager {
 
         let blankSprite;
 
+        //Organização dos lados melee
         if (humanMeleeDamage > 0) {
             const meleeSprite = orderedHumanBattlefieldDice.filter(dice => dice.name === "Melee")
-            finalOrderedHumanBattlefieldDice.push(...meleeSprite);
-            if (aiMeleeDef > humanMeleeDamage) {
-                const aiMeleeDefSubHumanMeleeDamage = aiMeleeDef - humanMeleeDamage
-                console.log('Resultado dessa equação:', aiMeleeDefSubHumanMeleeDamage)
-                blankSprite = this.createBlankSpritesArray(aiMeleeDefSubHumanMeleeDamage)
-                console.log('Array com espaco em branco sendo criado', blankSprite)
+            humanMeleeSidesBattlefield.push(...meleeSprite);
+            if (aiMeleeDef > 0) {
+                const defSprite = orderedAIBattlefieldDice.filter(dice => dice.name === "DefMelee" || "BlessedDefMelee")
+                aiMeleeDefSidesBattlefield.push(...defSprite)
             }
-            finalOrderedHumanBattlefieldDice.push(...blankSprite); 
-            blankSprite = [];
-            console.log('Array final com espaco em branco sendo criado', finalOrderedHumanBattlefieldDice)
-        }
-
-        if (humanRangedDamage > 0) {
-            const rangedSprite = orderedHumanBattlefieldDice.filter(dice => dice.name === "Ranged" || "BlessedRanged")
-            finalOrderedHumanBattlefieldDice.push(...rangedSprite);
-            // if (aiRangedDef > humanRangedDamage) {
-            //     for (let i = 0; i < aiRangedDifference; i++) {
-            //         finalOrderedHumanBattlefieldDice.push(...blankSprite);
-            //     }
-            // }
-        }
-
-        if (humanThief > 0) {
-            const thiefSprite = orderedHumanBattlefieldDice.filter(dice => dice.name === "Thief" || "BlessedThief")
-            for (let i = 0; i < humanThief; i++) {
-                finalOrderedHumanBattlefieldDice.push(thiefSprite);
-                // finalOrderedAIBattlefieldDice.push(blankSprite)
+        } else if (humanMeleeDamage === 0) {
+            if (aiMeleeDef > 0) {
+                const defSprite = orderedAIBattlefieldDice.filter(dice => dice.name === "DefMelee" || "BlessedDefMelee")
+                aiMeleeDefSidesBattlefield.push(...defSprite)
             }
         }
-
-        if (aiThief > 0) {
-            const thiefSprite = orderedAIBattlefieldDice.filter(dice => dice.name === "Thief" || "BlessedThief")
-            for (let i = 0; i < humanThief; i++) {
-                finalOrderedAIBattlefieldDice.push(thiefSprite);
-                // finalOrderedHumanBattlefieldDice.push(blankSprite)
-            }
-        }
-
-        if (aiMeleeDamage > 0) {
-            const meleeSprite = orderedAIBattlefieldDice.filter(dice => dice.name === "Melee")
-            for (let i = 0; i < aiMeleeDamage; i++) {
-                finalOrderedAIBattlefieldDice.push(meleeSprite);
-            }
-            // if (humanMeleeDef > aiMeleeDamage) {
-            //     for (let i = 0; i < humanMeleeDifference; i++) {
-            //         finalOrderedAIBattlefieldDice.push(blankSprite);
-            //     }
-            // }
-        }
-
-        if (aiRangedDamage > 0) {
-            const rangedSprite = orderedAIBattlefieldDice.filter(dice => dice.name === "Ranged" || "BlessedRanged")
-            for (let i = 0; i < aiRangedDamage; i++) {
-                finalOrderedAIBattlefieldDice.push(rangedSprite);
-            }
-            // if (humanRangedDef > aiRangedDamage) {
-            //     for (let i = 0; i < humanRangedDifference; i++) {
-            //         finalOrderedAIBattlefieldDice.push(blankSprite);
-            //     }
-            // }
-        }
-
-        console.log('array HumanfinalOrderBattlefieldDice:', finalOrderedHumanBattlefieldDice)
-        console.log('array aifinalOrderBattlefieldDice:', finalOrderedAIBattlefieldDice)
-        console.log('humanMeleeDiff:', humanMeleeDifference)
-
 
         let humanStartX = 400;
-        let humanStartY = 400
-
         let aiStartX = 400;
-        const aiStartY = 300;
         const espacoEntreDado = 50;
         //Animação organização dos dados
-        orderedHumanBattlefieldDice.forEach((dices) => {
-            const endX = humanStartX
-            const endY = humanStartY
+        humanMeleeSidesBattlefield.forEach((dices) => {
             this.scene.tweens.add({
                 targets: dices.sprite,
-                x: endX,
-                y: endY,
+                x: humanStartX,
+                y: 400,
                 duration: 1000,
                 ease: 'Linear',
                 onComplete: () => {
@@ -148,63 +92,64 @@ export default class BattleManager {
         })
 
         //ORGANIZAÇÃO DOS DADOS MELEE INIMIGA      
-        orderedAIBattlefieldDice.forEach((dices) => {
-            const endX = humanStartY
-            const endY = aiStartY
+        aiMeleeDefSidesBattlefield.forEach((dices) => {
             this.scene.tweens.add({
                 targets: dices.sprite,
-                x: endX,
-                y: endY,
+                x: aiStartX,
+                y: 300,
                 duration: 1000,
                 ease: 'Linear',
                 onComplete: () => {
                     console.log('Animei')
                 }
             })
-            humanStartY += espacoEntreDado;
+            aiStartX += espacoEntreDado;
         })
-    }
 
-    public resolveDuel(humanBattlefieldDice: Phaser.GameObjects.Sprite[] = [], aiBattlefieldDice: Phaser.GameObjects.Sprite[] = []) {
-        const humanMeleeDamage = BattleManager.humanTotalDamage(humanBattlefieldDice, "Melee");
-        const humanRangedDamage = BattleManager.humanTotalDamage(humanBattlefieldDice, "Ranged");
-
-        const humanMeleeDef = BattleManager.humanTotalDefense(humanBattlefieldDice, "DefMelee");
-        const humanRangedDef = BattleManager.humanTotalDefense(humanBattlefieldDice, "DefRanged");
-
-        const aiMeleeDamage = BattleManager.aiTotalDamage(aiBattlefieldDice, "Melee");
-        const aiRangedDamage = BattleManager.aiTotalDamage(aiBattlefieldDice, "Ranged");
-
-        const aiMeleeDef = BattleManager.aiTotalDefense(aiBattlefieldDice, "DefMelee");
-        const aiRangedDef = BattleManager.aiTotalDefense(aiBattlefieldDice, "DefRanged");
-
-        const humanMeleeDifference = humanMeleeDamage - aiMeleeDef;
-        const humanRangedDifference = humanRangedDamage - aiRangedDef;
-        const aiMeleeDifference = aiMeleeDamage - humanMeleeDef;
-        const aiRangedDifference = aiRangedDamage - humanRangedDef;
-
-        BattleManager.applyDamageToIA(this, humanMeleeDifference, humanRangedDifference);
-        BattleManager.applyDamageToHuman(this, aiMeleeDifference, aiRangedDifference);
-
-        console.log('Total de ataque humano melee:', humanMeleeDamage)
-        console.log('totalde ataque ai melee:', aiMeleeDamage)
-
-        console.log("Differences - Human Melee:", humanMeleeDifference, "Ranged:", humanRangedDifference);
-        console.log("Differences - AI Melee:", aiMeleeDifference, "Ranged:", aiRangedDifference);
-
-        console.log("EUREKAAAAAA");
+        console.log('dano:', humanMeleeDamage, 'vida:', this.aiHealth)
+        this.aiHealth = this.aiHealth - humanMeleeDamage;
         this.updateHealthText();
+        humanMeleeSidesBattlefield.forEach(sprite => {
+            sprite.sprite.destroy();
+        })
+
+        aiMeleeDefSidesBattlefield.forEach(sprite => {
+            sprite.destroy();
+        })
+        humanMeleeSidesBattlefield = []
+        aiMeleeDefSidesBattlefield = []
     }
 
-    createBlankSpritesArray(count: number): Phaser.GameObjects.Rectangle[] {
-        const blankSprites: Phaser.GameObjects.Rectangle[] = [];
+    // public resolveDuel(humanBattlefieldDice: Phaser.GameObjects.Sprite[] = [], aiBattlefieldDice: Phaser.GameObjects.Sprite[] = []) {
+    //     const humanMeleeDamage = BattleManager.humanTotalDamage(humanBattlefieldDice, "Melee");
+    //     const humanRangedDamage = BattleManager.humanTotalDamage(humanBattlefieldDice, "Ranged");
 
-        for (let i = 0; i < count; i++) {
-            const newBlankSprite = this.scene.add.rectangle(0, 0, 90, 90, 0xffffff, 0);
-            blankSprites.push(newBlankSprite);
-        }
-        return blankSprites;
-    }
+    //     const humanMeleeDef = BattleManager.humanTotalDefense(humanBattlefieldDice, "DefMelee");
+    //     const humanRangedDef = BattleManager.humanTotalDefense(humanBattlefieldDice, "DefRanged");
+
+    //     const aiMeleeDamage = BattleManager.aiTotalDamage(aiBattlefieldDice, "Melee");
+    //     const aiRangedDamage = BattleManager.aiTotalDamage(aiBattlefieldDice, "Ranged");
+
+    //     const aiMeleeDef = BattleManager.aiTotalDefense(aiBattlefieldDice, "DefMelee");
+    //     const aiRangedDef = BattleManager.aiTotalDefense(aiBattlefieldDice, "DefRanged");
+
+    //     const humanMeleeDifference = humanMeleeDamage - aiMeleeDef;
+    //     const humanRangedDifference = humanRangedDamage - aiRangedDef;
+    //     const aiMeleeDifference = aiMeleeDamage - humanMeleeDef;
+    //     const aiRangedDifference = aiRangedDamage - humanRangedDef;
+
+    //     BattleManager.applyDamageToIA(this, humanMeleeDifference, humanRangedDifference);
+    //     BattleManager.applyDamageToHuman(this, aiMeleeDifference, aiRangedDifference);
+
+    //     console.log('Total de ataque humano melee:', humanMeleeDamage)
+    //     console.log('totalde ataque ai melee:', aiMeleeDamage)
+
+    //     console.log("Differences - Human Melee:", humanMeleeDifference, "Ranged:", humanRangedDifference);
+    //     console.log("Differences - AI Melee:", aiMeleeDifference, "Ranged:", aiRangedDifference);
+
+    //     console.log("EUREKAAAAAA");
+    //     this.updateHealthText();
+    // }
 
     private static humanTotalDamage(battlefieldDice: Phaser.GameObjects.Sprite[], type: string): number {
         let totalDamage = 0;
@@ -213,7 +158,7 @@ export default class BattleManager {
             const diceSprite = diceInfo.sprite;
             const diceName = diceSprite.texture.key;
 
-            if (diceName.includes(type) && !diceName.includes("Def")) {
+            if (diceName === type) {
                 totalDamage += 1;
             }
         }
@@ -227,7 +172,7 @@ export default class BattleManager {
             const diceSprite = diceInfo.sprite;
             const diceName = diceSprite.texture.key;
 
-            if (diceName.includes(type)) {
+            if (diceName === type) {
                 totalDefense += 1;
             }
         }
@@ -241,7 +186,7 @@ export default class BattleManager {
             const diceSprite = diceInfo.sprite;
             const diceName = diceSprite.texture.key;
 
-            if (diceName.includes(type)) {
+            if (diceName === type) {
                 totalThief += 1;
             }
         }
@@ -255,7 +200,7 @@ export default class BattleManager {
             const diceSprite = diceInfo.sprite;
             const diceName = diceSprite.texture.key;
 
-            if (diceName.includes(type)) {
+            if (diceName === type) {
                 totalDamage += 1;
             }
         }
@@ -269,7 +214,7 @@ export default class BattleManager {
             const diceSprite = diceInfo.sprite;
             const diceName = diceSprite.texture.key;
 
-            if (diceName.includes(type)) {
+            if (diceName === type) {
                 aiTotalDefense += 1;
             }
         }
@@ -283,7 +228,7 @@ export default class BattleManager {
             const diceSprite = diceInfo.sprite;
             const diceName = diceSprite.texture.key;
 
-            if (diceName.includes(type)) {
+            if (diceName === type) {
                 totalThief += 1;
             }
         }
