@@ -204,6 +204,7 @@ export default class AncientDices extends Phaser.Scene {
       this.clearRemainingDices();
       if (this.turnCounter === 3) {
         this.battleManager.organizeBattlefieldDices(this.humanBattlefieldDice, this.aiBattlefieldDice)
+        this.battleManager
         // this.battleManager.resolveDuel(this.humanBattlefieldDice, this.aiBattlefieldDice);
         console.log("Antes de updateHealthText - Human Health:", this.battleManager.humanHealth, "AI Health:", this.battleManager.aiHealth);
         console.log("Depois de updateHealthText - Human Health:", this.battleManager.humanHealth, "AI Health:", this.battleManager.aiHealth);
