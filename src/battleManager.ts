@@ -44,7 +44,21 @@ export default class BattleManager {
 
         //Organização dos lados melee
         setTimeout(() => {
-            this.humanMeleeSideOrganization(humanMeleeDamage, aiMeleeDef, orderedHumanBattlefieldDice, orderedAIBattlefieldDice, humanMeleeSidesBattlefield, aiMeleeDefSidesBattlefield)
+            this.humanMeleeSideOrganization(humanMeleeDamage, aiMeleeDef, orderedHumanBattlefieldDice, orderedAIBattlefieldDice, humanMeleeSidesBattlefield, aiMeleeDefSidesBattlefield, "Melee", "DefMelee", "BlessedDefMelee")
+        }, 1000);
+        setTimeout(() => {
+            this.humanMeleeSideAnimation(humanMeleeSidesBattlefield, aiMeleeDefSidesBattlefield);
+        }, 2000);
+        setTimeout(() => {
+            this.humanMeleeSideDamageCalc(humanMeleeDamage, humanMeleeSidesBattlefield, aiMeleeDefSidesBattlefield);
+        }, 5000);
+        setTimeout(() => {
+            this.updateHealthText();
+        }, 5500);
+
+         //Organização dos lados ranged
+         setTimeout(() => {
+            this.humanMeleeSideOrganization(humanMeleeDamage, aiMeleeDef, orderedHumanBattlefieldDice, orderedAIBattlefieldDice, humanMeleeSidesBattlefield, aiMeleeDefSidesBattlefield, "Ranged", "DefRanged", "BlessedDefRanged", "BlessedRanged")
         }, 1000);
         setTimeout(() => {
             this.humanMeleeSideAnimation(humanMeleeSidesBattlefield, aiMeleeDefSidesBattlefield);
@@ -65,17 +79,21 @@ export default class BattleManager {
         orderedAIBattlefieldDice: Phaser.GameObjects.Sprite[],
         humanMeleeSidesBattlefield: Phaser.GameObjects.Sprite[],
         aiMeleeDefSidesBattlefield: Phaser.GameObjects.Sprite[],
+        attackTypeSide: string,
+        defTypeSide: string,
+        defBlessedTypeSide: string,
+        attackBlessedTypeSide?: string,
         ) {
         if (humanMeleeDamage > 0) {
-            const meleeSprite = orderedHumanBattlefieldDice.filter(dice => dice.name === "Melee")
+            const meleeSprite = orderedHumanBattlefieldDice.filter(dice => dice.name === attackTypeSide || attackBlessedTypeSide)
             humanMeleeSidesBattlefield.push(...meleeSprite);
             if (aiMeleeDef > 0) {
-                const defSprite = orderedAIBattlefieldDice.filter(dice => dice.name === "DefMelee" || "BlessedDefMelee")
+                const defSprite = orderedAIBattlefieldDice.filter(dice => dice.name === defTypeSide || defBlessedTypeSide)
                 aiMeleeDefSidesBattlefield.push(...defSprite)
             }
         } else if (humanMeleeDamage === 0) {
             if (aiMeleeDef > 0) {
-                const defSprite = orderedAIBattlefieldDice.filter(dice => dice.name === "DefMelee" || "BlessedDefMelee")
+                const defSprite = orderedAIBattlefieldDice.filter(dice => dice.name === defTypeSide || defBlessedTypeSide)
                 aiMeleeDefSidesBattlefield.push(...defSprite)
             }
         }

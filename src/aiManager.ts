@@ -5,41 +5,47 @@ export class AIManager {
   private scene: Phaser.Scene;
   private aiRobotArmSlots: Phaser.GameObjects.Image[];
   private allAIDicesArray: Phaser.GameObjects.Sprite[];
+  private allAIDicesArrayVerification: boolean[] = [];
 
   constructor(scene: Phaser.Scene, aiRobotArmSlots: Phaser.GameObjects.Image[], allAIDicesArray: Phaser.GameObjects.Sprite[]) {
     this.scene = scene;
     this.aiRobotArmSlots = aiRobotArmSlots;
     this.allAIDicesArray = allAIDicesArray;
+    this.allAIDicesArrayVerification = new Array(6).fill(false)
   }
 
-  aiRollDice() {
+  aiRollDiceExample(turnCounter: number) {
     let slotIndex = 0;
     for (const diceName in diceArrays) {
       const diceArray = diceArrays[diceName];
-      const randomDiceSide = Phaser.Math.RND.pick(diceArray);
-      const slot = this.aiRobotArmSlots[slotIndex];
-      if (slot) {
-        this.spawnDiceOnSlot(slot.x, slot.y, randomDiceSide, diceName);
+
+      if (turnCounter === 2 || turnCounter === 3) {
+        const isSelected = this.allAIDicesArrayVerification[slotIndex]
+        if (isSelected === false) {
+          const randomDiceSide = Phaser.Math.RND.pick(diceArray)
+
+          const spawnX = 520 + slotIndex * 72;
+          const spawnY = 100;
+
+          const resultDice = this.aiSpawnDiceOnSlot(spawnX, spawnY, randomDiceSide);
+          resultDice.setScale(0.4)
+          this.allAIDicesArray.push(resultDice);
+          console.log('allAIdices array turno 2:', this.allAIDicesArray)
+        }
+      }
+
+      if (turnCounter === 1) {
+        const meleeDice = diceArray.find((dice) => dice.name.includes("DefMelee"));
+
+        const spawnX = 520 + slotIndex * 72;
+        const spawnY = 100;
+
+        const resultDice = this.aiSpawnDiceOnSlot(spawnX, spawnY, meleeDice);
+        resultDice.setScale(0.4)
+        this.allAIDicesArray.push(resultDice);
+        this.allAIDicesArrayVerification.push(resultDice)
       }
       slotIndex++;
-    }
-  }
-
-  aiRollDiceExample() {
-    let slotIndex = 0;
-    for (const diceName in diceArrays) {
-      const diceArray = diceArrays[diceName];
-      const meleeDice = diceArray.find((dice) => dice.name.includes("DefRanged"));
-
-      const spawnX = 520 + slotIndex * 72;
-      const spawnY = 100;
-
-      const resultDice = this.aiSpawnDiceOnSlot(spawnX, spawnY, meleeDice);
-      resultDice.setScale(0.4)
-      this.allAIDicesArray.push(resultDice);
-
-      slotIndex++;
-      console.log("dados do inimigo:", this.allAIDicesArray);
     }
   }
 
@@ -49,19 +55,36 @@ export class AIManager {
     return diceSprite;
   }
 
-  moveAiDicesToBattlefield(aiBattlefieldSlots: Phaser.GameObjects.Rectangle[], aiBattlefieldDice: { sprite: Phaser.GameObjects.Sprite }[]) {
-    for (let i = 0; i < aiBattlefieldSlots.length; i++) {
-      const slot = aiBattlefieldSlots[i];
-      const diceSprite = this.allAIDicesArray[i];
+  moveAiDicesToBattlefield(aiBattlefieldSlots: Phaser.GameObjects.Rectangle[], aiBattlefieldDice: { sprite: Phaser.GameObjects.Sprite }[], turnCounter: number) {
+    if (turnCounter === 1) {
+      const selectedDices = this.allAIDicesArray.slice(0, 2);
+      this.allAIDicesArray.splice(0, 2);
 
-      if (slot && diceSprite) {
-        this.putAiDiceOnBattlefield(diceSprite, slot.x, slot.y, aiBattlefieldDice);
+      selectedDices.forEach((dice, index) => {
+        const slot = aiBattlefieldSlots[index];
 
-        const indexToRemove = aiBattlefieldSlots.indexOf(diceSprite);
-        if (indexToRemove !== -1) {
-          this.allAIDicesArray.splice(indexToRemove, 1);
+        if (dice && slot) {
+          this.putAiDiceOnBattlefield(dice, slot.x, slot.y, aiBattlefieldDice);
         }
-      }
+
+        const nextSlotIndex = index;
+        this.allAIDicesArrayVerification[nextSlotIndex] = true;
+      });
+
+    } else if (turnCounter === 2) {
+      const selectedDices = this.allAIDicesArray.slice(2, 4);
+      console.log("Antes de remover:", this.allAIDicesArray);
+      this.allAIDicesArray.splice(2, 2);
+      console.log("Depois de remover:", this.allAIDicesArray);
+      selectedDices.forEach((dice, index) => {
+        console.log("Colocando dado no campo:", dice);
+        const slot = aiBattlefieldSlots[index];
+
+        if (dice && slot) {
+          this.putAiDiceOnBattlefield(dice, slot.x, slot.y, aiBattlefieldDice);
+          this.allAIDicesArrayVerification[index + 2] = true;
+        }
+      });
     }
   }
 
@@ -69,13 +92,7 @@ export class AIManager {
     diceSprite.x = slotX;
     diceSprite.y = slotY;
 
-    const diceName = diceSprite.texture.key;
+    const diceName = diceSprite.key;
     aiBattlefieldDice.push({ sprite: diceSprite, name: diceName });
-  }
-
-  private spawnDiceOnSlot(x: number, y: number, diceSide: DiceArrayItem, diceName: string) {
-    const diceKey = `${diceName}_${diceSide.name}`;
-    const diceSprite = this.scene.add.sprite(x, y, diceKey);
-    // Lógica para manipular os dados quando são lançados pela IA
   }
 }

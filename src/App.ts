@@ -34,8 +34,11 @@ export default class AncientDices extends Phaser.Scene {
   private humanBless: number = 0;
   private aiBless: number = 0;
 
+  private availableSlots: number[] = [1, 2, 3, 4, 5, 6];
+
+
   constructor() {
-    super({ key: 'AncientDices'});
+    super({ key: 'AncientDices' });
     this.battleManager = new BattleManager(this);
     // this.aiManager = new AIManager(Phaser.Scene, this.aiRobotArmSlots, this.allAIDicesArray);
     // Outras inicializações, se necessário...
@@ -45,17 +48,13 @@ export default class AncientDices extends Phaser.Scene {
     this.load.image("BGBase", "src/assets/Background/Base.png");
     this.load.image("BGCircuit", "src/assets/Background/Circuits.png");
 
-    // for (const diceName in diceArrays) {
-    //   loadDiceImages(this, diceName, diceArrays[diceName]);
-    // }
-
     for (const diceName in diceArrays) {
       const diceArray = diceArrays[diceName];
       diceArray.forEach((item) => {
         loadDiceImages(this, item.name, item.imagePath);
       });
     }
-    
+
 
     // RobotArm Interactives
     this.load.image("roll", "src/assets/RoboticArm/Roll.png");
@@ -172,7 +171,11 @@ export default class AncientDices extends Phaser.Scene {
             const diceSprite = this.spawnDiceOnSlot(x, y, randomDiceSide);
             diceSprite.setScale(0.4)
             this.allHumanDicesArray.push(diceSprite);
+          } else {
+            this.allHumanDicesArray.push(null);
           }
+          console.log('AllHumanDices no turno 2 e 3:', this.allHumanDicesArray)
+          console.log('AllHumanDicesVerification no turno 2 e 3:', this.allHumanDicesArrayVerification)
         }
 
         // Lógica para o turno 1
@@ -186,7 +189,7 @@ export default class AncientDices extends Phaser.Scene {
           diceSprite.setScale(0.4)
 
           this.allHumanDicesArray.push(diceSprite);
-          this.allHumanDicesArrayVerification.push(diceSprite);
+          console.log("como essa verificação human está vindo?", this.allHumanDicesArrayVerification)
         }
         slotIndex++;
       }
@@ -201,17 +204,12 @@ export default class AncientDices extends Phaser.Scene {
 
     this.finishTurnButton.on("pointerdown", () => {
       this.disableFinishButton();
-      this.clearRemainingDices();
+      this.clearRemainingDices(this.allHumanDicesArray);
+      console.log('Dados limpos HUMANO::', this.allHumanDicesArray)
       if (this.turnCounter === 3) {
         this.battleManager.organizeBattlefieldDices(this.humanBattlefieldDice, this.aiBattlefieldDice)
         this.battleManager
-        // this.battleManager.resolveDuel(this.humanBattlefieldDice, this.aiBattlefieldDice);
-        console.log("Antes de updateHealthText - Human Health:", this.battleManager.humanHealth, "AI Health:", this.battleManager.aiHealth);
-        console.log("Depois de updateHealthText - Human Health:", this.battleManager.humanHealth, "AI Health:", this.battleManager.aiHealth);
-
-      } else if (
-        this.aiBattlefieldDice.length >= this.aiBattlefieldSlots.length
-      ) {
+      } else if (this.aiBattlefieldDice.length >= this.aiBattlefieldSlots.length) {
         setTimeout(() => {
           this.enableFinishButton();
         }, 2000);
@@ -219,24 +217,31 @@ export default class AncientDices extends Phaser.Scene {
         return;
       } else {
         setTimeout(() => {
-          this.aiManager.aiRollDiceExample();
+          this.aiManager.aiRollDiceExample(this.turnCounter);
         }, 1000);
 
         setTimeout(() => {
-          this.aiManager.moveAiDicesToBattlefield(this.aiBattlefieldSlots, this.aiBattlefieldDice);
+          this.aiManager.moveAiDicesToBattlefield(this.aiBattlefieldSlots, this.aiBattlefieldDice, this.turnCounter);
         }, 2000);
 
         setTimeout(() => {
+          this.clearRemainingDices(this.allAIDicesArray);
+          console.log('Eu limpei os dados????:', this.allAIDicesArray)
           this.enableFinishButton();
         }, 3000);
       }
     });
   }
 
-  clearRemainingDices() {
-    this.allHumanDicesArray.forEach((sprite) => sprite.destroy());
-    this.allHumanDicesArray = [];
+  clearRemainingDices(allDicesArray: (Phaser.GameObjects.Sprite | null)[]) {
+    allDicesArray.forEach((sprite) => {
+      if (sprite) {
+        sprite.destroy();
+      }
+    });
+    allDicesArray.length = 0;
   }
+
 
   disableFinishButton() {
     this.finishTurnButton.setFillStyle(0xff3b3b);
@@ -261,7 +266,7 @@ export default class AncientDices extends Phaser.Scene {
     this.turnText.setText(`Turno: ${this.turnCounter}`);
   }
 
-  private spawnDiceOnSlot(x: number,y: number,diceSide: DiceArrayItem) {
+  private spawnDiceOnSlot(x: number, y: number, diceSide: DiceArrayItem) {
     const diceKey = `${diceSide.name.replace(/\.png/g, '')}`;
     const diceSprite = this.add.sprite(x, y, diceKey).setInteractive();
     const menuGroup = this.menuGroup;
@@ -283,55 +288,64 @@ export default class AncientDices extends Phaser.Scene {
     diceSprite: Phaser.GameObjects.Sprite,
   ) {
     const menuText = this.add.text(x, y, text, {
-        color: "#000000",
-        backgroundColor: "#ffffff",
-        padding: {
-          left: 10,
-          right: 10,
-          top: 1,
-          bottom: 1,
-        },
-        fontSize: 12,
-        lineSpacing: 10,
-      }).setOrigin(0.5, 0.5).setInteractive().on("pointerdown", () => {
-        const localMenuGroup = this.menuGroup;
+      color: "#000000",
+      backgroundColor: "#ffffff",
+      padding: {
+        left: 10,
+        right: 10,
+        top: 1,
+        bottom: 1,
+      },
+      fontSize: 12,
+      lineSpacing: 10,
+    }).setOrigin(0.5, 0.5).setInteractive().on("pointerdown", () => {
+      const localMenuGroup = this.menuGroup;
 
-        if (text === "Cancelar" && localMenuGroup) {
-          localMenuGroup.setVisible(false);
-        } else if (text === "Selecionar" && localMenuGroup) {
-          if (this.humanBattlefieldDice.length < this.humanBattlefieldSlots.length) {
-            const nextSlotIndex = this.humanBattlefieldDice.length;
-            const nextSlot = this.humanBattlefieldSlots[nextSlotIndex];
+      if (text === "Cancelar" && localMenuGroup) {
+        localMenuGroup.setVisible(false);
 
-            this.putHumanDiceOnBattlefield(diceSprite, nextSlot.x, nextSlot.y);
-            this.allHumanDicesArrayVerification[nextSlotIndex] = true;
+      } else if (text === "Selecionar" && localMenuGroup) {
+        const nextSlotIndex = this.humanBattlefieldDice.length;
+        const nextSlot = this.humanBattlefieldSlots[nextSlotIndex];
 
-            const indexToRemove = this.allHumanDicesArray.indexOf(diceSprite);
-            if (indexToRemove !== -1) {
-              this.allHumanDicesArray.splice(indexToRemove, 1);
-            }
-            localMenuGroup.setVisible(false);
-            console.log("todos os dados após selecionar um dado",this.allHumanDicesArrayVerification);
-            console.log("todos os dados após selecionar um dado (array de criação)",this.allHumanDicesArray);
-          }
+        this.putHumanDiceOnBattlefield(diceSprite, nextSlot.x, nextSlot.y);
+
+        // this.allHumanDicesArrayVerification[nextSlotIndex] = true;
+
+        // const indexInArray = this.allHumanDicesArray.indexOf(diceSprite);
+        // console.log('diceSprite:', diceSprite)
+        // console.log('indexArray:', indexInArray)
+        // this.allHumanDicesArrayVerification[indexInArray] = true;
+
+        const indexToRemove = this.allHumanDicesArray.indexOf(diceSprite);
+        console.log('diceSprite:', diceSprite)
+        console.log('indexArray:', indexToRemove)
+        this.allHumanDicesArrayVerification[indexToRemove] = true;
+        if (indexToRemove !== -1) {
+          // this.allHumanDicesArray.splice(indexToRemove, 1);
+          this.allHumanDicesArray[indexToRemove] = null;
         }
-      });
+        localMenuGroup.setVisible(false);
+        console.log("todos os dados após selecionar um dado", this.allHumanDicesArrayVerification);
+        console.log("todos os dados após selecionar um dado (array de criação)", this.allHumanDicesArray);
+      }
+    });
 
     this.menuGroup.add(menuText);
   }
 
-  putHumanDiceOnBattlefield(diceSprite: Phaser.GameObjects.Sprite,slotX: number,slotY: number) {
+  putHumanDiceOnBattlefield(diceSprite: Phaser.GameObjects.Sprite, slotX: number, slotY: number) {
     diceSprite.disableInteractive();
     diceSprite.x = slotX;
     diceSprite.y = slotY;
 
     const diceName = diceSprite.texture.key;
 
-    console.log("O Que temos aqui de name?:",diceName);
+    console.log("O Que temos aqui de name?:", diceName);
 
     this.humanBattlefieldDice.push({ sprite: diceSprite, name: diceName });
 
-    console.log("info dos dados que eu preciso para o DUELO:",this.humanBattlefieldDice);
+    console.log("info dos dados que eu preciso para o DUELO:", this.humanBattlefieldDice);
   }
 
   private generateHumanDamageValue(): { [diceName: string]: number } {
